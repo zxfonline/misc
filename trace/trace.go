@@ -3,13 +3,13 @@ package trace
 import (
 	"net/http"
 
-	"topcrown.com/centerserver/misc/expvar"
+	"github.com/zxfonline/misc/expvar"
 
-	_ "topcrown.com/centerserver/misc/pprof"
+	_ "github.com/zxfonline/misc/pprof"
 
-	"topcrown.com/centerserver/misc/iptable"
+	"github.com/zxfonline/misc/iptable"
 
-	"topcrown.com/centerserver/misc/golangtrace"
+	"github.com/zxfonline/misc/golangtrace"
 )
 
 func Init(enableTracing bool, checkip bool) {

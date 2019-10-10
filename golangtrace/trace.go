@@ -76,11 +76,11 @@ import (
 	"sync/atomic"
 	"time"
 
-	"topcrown.com/centerserver/misc/json"
+	"github.com/zxfonline/misc/json"
 
-	"topcrown.com/centerserver/misc/log"
+	"github.com/zxfonline/misc/log"
 
-	"topcrown.com/centerserver/misc/golangtrace/timeseries"
+	"github.com/zxfonline/misc/golangtrace/timeseries"
 )
 
 // DebugUseAfterFinish controls whether to debug uses of Trace values after finishing.

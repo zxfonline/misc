@@ -16,7 +16,7 @@ import (
 	"sync"
 	"testing"
 
-	"topcrown.com/centerserver/misc/json"
+	"github.com/zxfonline/misc/json"
 )
 
 // RemoveAll removes all exported variables.

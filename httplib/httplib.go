@@ -49,9 +49,9 @@ import (
 	"sync"
 	"time"
 
-	"topcrown.com/centerserver/misc/json"
+	"github.com/zxfonline/misc/json"
 
-	"topcrown.com/centerserver/misc/log"
+	"github.com/zxfonline/misc/log"
 )
 
 var DefaultSetting = BeegoHTTPSettings{

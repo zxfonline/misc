@@ -12,7 +12,7 @@ import (
 	"os"
 	"strings"
 
-	"topcrown.com/centerserver/misc/json"
+	"github.com/zxfonline/misc/json"
 )
 
 func ExampleMarshal() {

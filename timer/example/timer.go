@@ -5,8 +5,8 @@ import (
 	"math/rand"
 	"time"
 
-	"topcrown.com/centerserver/misc/taskexcutor"
-	"topcrown.com/centerserver/misc/timer"
+	"github.com/zxfonline/misc/taskexcutor"
+	"github.com/zxfonline/misc/timer"
 )
 
 func randInt(min int32, max int32) int32 {

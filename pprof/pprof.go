@@ -61,9 +61,9 @@ import (
 	"strings"
 	"time"
 
-	"topcrown.com/centerserver/misc/log"
+	"github.com/zxfonline/misc/log"
 
-	"topcrown.com/centerserver/misc/iptable"
+	"github.com/zxfonline/misc/iptable"
 )
 
 func init() {

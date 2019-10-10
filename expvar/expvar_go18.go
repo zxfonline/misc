@@ -27,7 +27,7 @@ package expvar
 import (
 	"bytes"
 
-	"topcrown.com/centerserver/misc/iptable"
+	"github.com/zxfonline/misc/iptable"
 
 	"fmt"
 	"math"
@@ -39,9 +39,9 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"topcrown.com/centerserver/misc/json"
+	"github.com/zxfonline/misc/json"
 
-	"topcrown.com/centerserver/misc/log"
+	"github.com/zxfonline/misc/log"
 )
 
 // Var is an abstract type for all exported variables.

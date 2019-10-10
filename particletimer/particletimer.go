@@ -6,9 +6,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"topcrown.com/centerserver/misc/log"
+	"github.com/zxfonline/misc/log"
 
-	"topcrown.com/centerserver/misc/chanutil"
+	"github.com/zxfonline/misc/chanutil"
 )
 
 type _timer_event struct {

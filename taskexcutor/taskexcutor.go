@@ -7,10 +7,10 @@ import (
 
 	"sync"
 
-	"topcrown.com/centerserver/misc/chanutil"
-	"topcrown.com/centerserver/misc/log"
+	"github.com/zxfonline/misc/chanutil"
+	"github.com/zxfonline/misc/log"
 
-	"topcrown.com/centerserver/misc/gerror"
+	"github.com/zxfonline/misc/gerror"
 )
 
 var (

@@ -7,8 +7,8 @@ import (
 	"os"
 	"sort"
 
-	"topcrown.com/centerserver/misc/fileutil"
-	"topcrown.com/centerserver/misc/log"
+	"github.com/zxfonline/misc/fileutil"
+	"github.com/zxfonline/misc/log"
 )
 
 var (

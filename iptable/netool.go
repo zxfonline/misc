@@ -10,13 +10,13 @@ import (
 	"strings"
 	"sync"
 
-	"topcrown.com/centerserver/misc/log"
+	"github.com/zxfonline/misc/log"
 
-	"topcrown.com/centerserver/misc/proxyutil"
+	"github.com/zxfonline/misc/proxyutil"
 
-	"topcrown.com/centerserver/misc/config"
+	"github.com/zxfonline/misc/config"
 
-	"topcrown.com/centerserver/misc/strutil"
+	"github.com/zxfonline/misc/strutil"
 )
 
 var (

@@ -8,10 +8,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"topcrown.com/centerserver/misc/chanutil"
+	"github.com/zxfonline/misc/chanutil"
 
-	"topcrown.com/centerserver/misc/log"
-	"topcrown.com/centerserver/misc/timefix"
+	"github.com/zxfonline/misc/log"
+	"github.com/zxfonline/misc/timefix"
 )
 
 var _session_id int64

@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"topcrown.com/centerserver/misc/golangtrace"
+	"github.com/zxfonline/misc/golangtrace"
 )
 
 var (

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"topcrown.com/centerserver/misc/csvconfig"
-	"topcrown.com/centerserver/misc/keyword"
+	"github.com/zxfonline/misc/csvconfig"
+	"github.com/zxfonline/misc/keyword"
 )
 
 func main() {
