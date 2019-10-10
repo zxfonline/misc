@@ -100,7 +100,7 @@ func Close() {
  */
 func CreateTimer(receiver int64, delay int64, msg Msg) int64 {
 	if atomic.LoadInt32(&loadstate) != 1 {
-		log.Warnf("timer no open or closed, msg:%+v.", msg)
+		log.Warnf("timer no open or closed, msg:%+v", msg)
 		return 0
 	}
 	if len(timer_ch) >= MAX_TIMER_CHAN_SIZE {
@@ -139,7 +139,7 @@ func RegistTimerHander(action Action, handler *TimerHandler) {
 	}
 	event_trigger[action] = handler
 	handler.ID = action
-	log.Infof("regist action:%d.", action)
+	log.Infof("regist action:%d", action)
 }
 
 /*加载定时器数据，返回开启定时器函数
@@ -158,20 +158,20 @@ func StartTimers(data *bytes.Buffer, excutor taskexcutor.Excutor) func() {
 	}
 	if data.Len() != 0 {
 		if err := gob.NewDecoder(data).Decode(info); err != nil {
-			panic(fmt.Errorf("decode timer data error,err:%v.", err))
+			panic(fmt.Errorf("decode timer data error,err:%v", err))
 		}
 	}
 
 	_timer_lock.Lock()
 	nextTimerId = info.NextId
 	// reset next timer id
-	log.Infof("load timerNextId:%d.", nextTimerId)
+	log.Infof("load timerNextId:%d", nextTimerId)
 	_timer_lock.Unlock()
 	tsexcutor = excutor
 
 	return func() {
 		rescheduleTimers(info)
-		log.Info("start db timer.")
+		log.Info("start db timer")
 		go working()
 	}
 }
@@ -181,13 +181,13 @@ func working() {
 	defer func() {
 		if !Closed() {
 			if e := recover(); e != nil {
-				log.Errorf("recover err:%+v.", e)
+				log.Errorf("recover err:%+v", e)
 			}
-			log.Info("restart db timer.")
+			log.Info("restart db timer")
 			go working()
 		} else {
 			if e := recover(); e != nil {
-				log.Warnf("recover err:%+v.", e)
+				log.Warnf("recover err:%+v", e)
 			}
 		}
 	}()
@@ -206,12 +206,12 @@ func working() {
 					task.ID = tt.ID
 					tsexcutor.Excute(task)
 				} else {
-					log.Warnf("timer no found trigger, timer:%+v.", ts)
+					log.Warnf("timer no found trigger, timer:%+v", ts)
 				}
 			} else {
 				_timer_lock.Unlock()
 				CancelTimer(id)
-				log.Warnf("timer no found, timer:%+v.", ts)
+				log.Warnf("timer no found, timer:%+v", ts)
 			}
 		}
 	}
@@ -258,7 +258,7 @@ func DumpTimers(buffer *bytes.Buffer) error {
 	if err := gob.NewEncoder(buffer).Encode(info); err != nil {
 		return err
 	}
-	log.Debugf("save timerNextId=%d,size:%d.", nextTimerId, len(info.Timers))
+	log.Debugf("save timerNextId=%d,size:%d", nextTimerId, len(info.Timers))
 	return nil
 }
 

@@ -50,7 +50,7 @@ func findFile(table string) (*os.File, error) {
 func Load(_table_list []string) error {
 	_tables = make(map[string]*Table)
 	for _, table := range _table_list {
-		log.Infof("Load csv config: %v.", table)
+		log.Infof("Load csv config: %v", table)
 		f, err := findFile(table)
 		if err != nil {
 			return err

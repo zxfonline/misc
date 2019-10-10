@@ -45,7 +45,7 @@ func GTimer() *Timer {
 
 func SetGTimer(timer *Timer) {
 	if _GTimer != nil {
-		panic(errors.New("GTimer has been inited."))
+		panic(errors.New("GTimer has been inited"))
 	}
 	_GTimer = timer
 }
@@ -175,7 +175,7 @@ func (t *Timer) sleeper(sleeperId int64) {
 		for tm >= e.nextTime {
 			if e.listener != nil {
 				if tm-e.nextTime >= 2*e.interval {
-					log.Warnf("interval run timeout,event:%+v,current:%v.", e, tm)
+					log.Warnf("interval run timeout,event:%+v,current:%v", e, tm)
 				}
 				if e.absolute {
 					e.nextTime += e.interval
@@ -186,7 +186,7 @@ func (t *Timer) sleeper(sleeperId int64) {
 				if e.count != 0 {
 					e.costCount++
 					if err != nil {
-						log.Warnf("interval run err:%v,event:%+v.", err, e)
+						log.Warnf("interval run err:%v,event:%+v", err, e)
 						//					} else {
 						//						e.costCount++
 					}
@@ -202,7 +202,7 @@ func (t *Timer) sleeper(sleeperId int64) {
 					e = t.events[0]
 				}
 			} else {
-				log.Warnf("run nil listener,event:%+v.", e)
+				log.Warnf("run nil listener,event:%+v", e)
 				heap.Pop(&t.events)
 				e = t.events[0]
 			}
@@ -240,7 +240,7 @@ func (t *eventHeap) Pop() interface{} {
 	e := old[n]
 	*t = old[0:n]
 	e.i = -1
-	//logger.LogDebug("closed:event=%+v.", e)
+	//logger.LogDebug("closed:event=%+v", e)
 	e.listener = nil
 	e.t = nil
 	return e

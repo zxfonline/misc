@@ -38,7 +38,7 @@ var (
 func init() {
 	go func() {
 		defer func() {
-			log.Infof("DEFAULT LOCAL IP MASK: %s | %s .", InterIPNet.String(), InterExternalIp.String())
+			log.Infof("DEFAULT LOCAL IP MASK: %s | %s", InterIPNet.String(), InterExternalIp.String())
 		}()
 		//初始化默认网关
 		// ipStr := GetLocalInternalIp()
@@ -64,7 +64,7 @@ func LoadIpTable(configurl string) {
 	//读取初始化配置文件
 	cfg, err := config.ReadDefault(configurl)
 	if err != nil {
-		log.Warn("load ip filter table [%s]error,err:%v.", configurl, err)
+		log.Warn("load ip filter table [%s]error,err:%v", configurl, err)
 		return
 	}
 	//解析系统环境变量
@@ -75,13 +75,13 @@ func LoadIpTable(configurl string) {
 			//on=true 表示白名单，off表示黑名单
 			on, err := cfg.Bool(section, option)
 			if err != nil {
-				log.Warnf("IP TABLE parse err,section:%s,option:%s,err:%v.", section, option, err)
+				log.Warnf("IP TABLE parse err,section:%s,option:%s,err:%v", section, option, err)
 			} else {
 				ip := ParseFilterIp(option)
 				if ip != nil {
 					trustmap[string(ip)] = on
 				} else {
-					log.Warnf("IP TABLE parse err,section:%s,%s=%v.", section, option, on)
+					log.Warnf("IP TABLE parse err,section:%s,%s=%v", section, option, on)
 				}
 			}
 		}
@@ -154,7 +154,7 @@ func AddIpFilter(ipmatch string, whiteIp bool) {
 		_TrustFilterMap[string(ip)] = whiteIp
 		lock.Unlock()
 	} else {
-		log.Warn("%s=%v,parse err.", ipmatch, whiteIp)
+		log.Warn("%s=%v,parse err", ipmatch, whiteIp)
 	}
 }
 
@@ -321,7 +321,7 @@ func DeleteIPs(ipmatchs []string) {
 		if ip != nil {
 			delete(_TrustFilterMap, string(ip))
 		} else {
-			log.Warn("ip:%s,parse err.", ipmatch)
+			log.Warn("ip:%s,parse err", ipmatch)
 		}
 	}
 	lock.Unlock()

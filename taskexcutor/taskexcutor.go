@@ -34,7 +34,7 @@ func GExcutor() Excutor {
 
 func SetGExcutor(excutor Excutor) {
 	if _GExcutor != nil {
-		panic(errors.New("_GExcutor has been inited."))
+		panic(errors.New("_GExcutor has been inited"))
 	}
 	_GExcutor = excutor
 }
@@ -52,7 +52,7 @@ func (c TaskExcutor) Excute(task *TaskService) (err error) {
 	defer gerror.PanicToErr(&err)
 	c <- task
 	if wait := len(c); wait > cap(c)/10*5 && wait%100 == 0 {
-		log.Warnf("task excutor taskchan process,waitchan:%d/%d.", wait, cap(c))
+		log.Warnf("task excutor taskchan process,waitchan:%d/%d", wait, cap(c))
 	}
 	return
 }
@@ -233,7 +233,7 @@ func (p *MultiplePoolExcutor) Excute(task *TaskService) error {
 	default:
 		p.taskchan <- task //阻塞等待
 		if wait := len(p.taskchan); wait > cap(p.taskchan)/10*5 && wait%100 == 0 {
-			log.Warnf("taskpool excutor taskchan process,waitchan:%d/%d.", wait, cap(p.taskchan))
+			log.Warnf("taskpool excutor taskchan process,waitchan:%d/%d", wait, cap(p.taskchan))
 		}
 		return nil
 	}

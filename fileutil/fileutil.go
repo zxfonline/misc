@@ -33,7 +33,7 @@ var (
 
 func init() {
 	wd, _ := os.Getwd()
-	log.Infof("execute path:%v.", wd)
+	log.Infof("execute path:%v", wd)
 	arg0 := path.Clean(os.Args[0])
 	var exeFile string
 	if strings.HasPrefix(arg0, "/") {
@@ -55,7 +55,7 @@ func init() {
 	if wdDir != exeLastDir { //3：可执行文件上一级目录
 		defaultDirs = append(defaultDirs, exeLastDir)
 	}
-	log.Infof("default file base dirs:%v.", defaultDirs)
+	log.Infof("default file base dirs:%v", defaultDirs)
 	SetOSEnv(EnvGoExeName, exeName)
 	ExeName = exeName
 }
@@ -104,7 +104,7 @@ func FindFile(name string, flag int, perm os.FileMode) (*os.File, error) {
 		if FileExists(fpath) {
 			f, err := os.OpenFile(fpath, flag, perm)
 			if err != nil {
-				return nil, fmt.Errorf("open file err,path:%s,err:%v.", fpath, err)
+				return nil, fmt.Errorf("open file err,path:%s,err:%v", fpath, err)
 			}
 			return f, nil
 		}
@@ -113,11 +113,11 @@ func FindFile(name string, flag int, perm os.FileMode) (*os.File, error) {
 	if FileExists(fpath) {
 		f, err := os.OpenFile(fpath, flag, perm)
 		if err != nil {
-			return nil, fmt.Errorf("open file err,path:%s,err:%v.", fpath, err)
+			return nil, fmt.Errorf("open file err,path:%s,err:%v", fpath, err)
 		}
 		return f, nil
 	}
-	return nil, fmt.Errorf("file no found,file:%s,dirs:%v.", fpath, defaultDirs)
+	return nil, fmt.Errorf("file no found,file:%s,dirs:%v", fpath, defaultDirs)
 }
 
 //FindFullFilePath 查找相对目录文件的全路径文件 根据初始化的文件目录顺序查找文件（查文件不是查目录）
@@ -132,7 +132,7 @@ func FindFullFilePath(name string) (string, error) {
 	if FileExists(fpath) {
 		return fpath, nil
 	}
-	return "", fmt.Errorf("file no found,file:%s,dirs:%v.", fpath, defaultDirs)
+	return "", fmt.Errorf("file no found,file:%s,dirs:%v", fpath, defaultDirs)
 }
 
 //FindFullPathPath 查找相对文件目录的全路径目录 根据初始化的文件目录顺序查找文件（查目录不是查文件）
@@ -147,7 +147,7 @@ func FindFullPathPath(name string) (string, error) {
 	if DirExists(fpath) {
 		return fpath, nil
 	}
-	return "", fmt.Errorf("file no found,path:%s,dirs:%v.", fpath, defaultDirs)
+	return "", fmt.Errorf("file no found,path:%s,dirs:%v", fpath, defaultDirs)
 }
 
 //OpenFile 打开文件，如果目录文件不存在则创建一个文件
