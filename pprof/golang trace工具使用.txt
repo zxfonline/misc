@@ -1,0 +1,9 @@
+Trace:
+1. 首先需要收集二进制的trace数据。curl  -s "118.178.93.58:11001/debug/pprof/trace?seconds=10" > trace.data
+上述命令收集10秒的trace保存在本地的trace.data文件中，该文件是二进制的。
+2. 其次需要将二进制的trace数据转换为json格式。执行go tool trace -http=':127.0.0.18888' blocksmain trace.data
+其中blocksmain是118.178.93.58:11001对应的二进制golang程序，trace.data是上述抓取的二进制数据。新开终端，执行curl 127.0.0.1:8888/jsontrace > trace.json
+将前一步的trace.data转换层trace.json格式。
+3. 再次将trace.json转换为html格式。
+到https://github.com/catapult-project/catapult/tree/master/tracing下载trace-viewer工具，执行./trace2html ~/trace/trace.json
+生成trace.html文件，使用浏览器打开，如下。
