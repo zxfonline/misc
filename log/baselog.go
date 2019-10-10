@@ -46,9 +46,9 @@ func Warn(args ...interface{}) {
 	Logger.WithFields(BaseLogFields).Warn(args...)
 }
 
-//func Warning(args ...interface{}) {
-//	Logger.WithFields(BaseLogFields).Warning(args...)
-//}
+func Warning(args ...interface{}) {
+	Logger.WithFields(BaseLogFields).Warning(args...)
+}
 
 func Error(args ...interface{}) {
 	Logger.WithFields(BaseLogFields).Error(args...)
@@ -83,9 +83,9 @@ func Warnf(format string, args ...interface{}) {
 	Logger.WithFields(BaseLogFields).Warnf(format, args...)
 }
 
-//func Warningf(format string, args ...interface{}) {
-//	Logger.WithFields(BaseLogFields).Warningf(format, args...)
-//}
+func Warningf(format string, args ...interface{}) {
+	Logger.WithFields(BaseLogFields).Warningf(format, args...)
+}
 
 func Errorf(format string, args ...interface{}) {
 	Logger.WithFields(BaseLogFields).Errorf(format, args...)
@@ -100,41 +100,41 @@ func Panicf(format string, args ...interface{}) {
 	Logger.WithFields(BaseLogFields).Panicf(format, args...)
 }
 
-//func Traceln(args ...interface{}) {
-//	Logger.WithFields(BaseLogFields).Traceln(args...)
-//}
-//
-//func Debugln(args ...interface{}) {
-//	Logger.WithFields(BaseLogFields).Debugln(args...)
-//}
-//
-//func Infoln(args ...interface{}) {
-//	Logger.WithFields(BaseLogFields).Infoln(args...)
-//}
-//
-//func Println(args ...interface{}) {
-//	Logger.WithFields(BaseLogFields).Println(args...)
-//}
-//
-//func Warnln(args ...interface{}) {
-//	Logger.WithFields(BaseLogFields).Warnln(args...)
-//}
-//
-//func Warningln(args ...interface{}) {
-//	Logger.WithFields(BaseLogFields).Warningln(args...)
-//}
-//
-//func Errorln(args ...interface{}) {
-//	Logger.WithFields(BaseLogFields).Errorln(args...)
-//}
+func Traceln(args ...interface{}) {
+	Logger.WithFields(BaseLogFields).Traceln(args...)
+}
 
-//func Fatalln(args ...interface{}) {
-//	Logger.WithFields(BaseLogFields).Fatalln(args...)
-//}
+func Debugln(args ...interface{}) {
+	Logger.WithFields(BaseLogFields).Debugln(args...)
+}
 
-//func Panicln(args ...interface{}) {
-//	Logger.WithFields(BaseLogFields).Panicln(args...)
-//}
+func Infoln(args ...interface{}) {
+	Logger.WithFields(BaseLogFields).Infoln(args...)
+}
+
+func Println(args ...interface{}) {
+	Logger.WithFields(BaseLogFields).Println(args...)
+}
+
+func Warnln(args ...interface{}) {
+	Logger.WithFields(BaseLogFields).Warnln(args...)
+}
+
+func Warningln(args ...interface{}) {
+	Logger.WithFields(BaseLogFields).Warningln(args...)
+}
+
+func Errorln(args ...interface{}) {
+	Logger.WithFields(BaseLogFields).Errorln(args...)
+}
+
+func Fatalln(args ...interface{}) {
+	Logger.WithFields(BaseLogFields).Fatalln(args...)
+}
+
+func Panicln(args ...interface{}) {
+	Logger.WithFields(BaseLogFields).Panicln(args...)
+}
 
 //use for defer recover
 func PrintPanicStack() {
