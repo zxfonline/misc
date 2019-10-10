@@ -109,7 +109,7 @@ func CreateTimer(receiver int64, delay int64, msg Msg) int64 {
 		//return 0
 	}
 	if _, ok := event_trigger[msg.Action]; !ok {
-		log.Warnf("no found trigger, msg:%+v.", msg)
+		log.Warnf("no found trigger, msg:%+v", msg)
 		return 0
 	}
 	if delay < 0 {

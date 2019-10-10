@@ -64,7 +64,7 @@ func LoadIpTable(configurl string) {
 	//读取初始化配置文件
 	cfg, err := config.ReadDefault(configurl)
 	if err != nil {
-		log.Warn("load ip filter table [%s]error,err:%v", configurl, err)
+		log.Warnf("load ip filter table [%s]error,err:%v", configurl, err)
 		return
 	}
 	//解析系统环境变量
@@ -154,7 +154,7 @@ func AddIpFilter(ipmatch string, whiteIp bool) {
 		_TrustFilterMap[string(ip)] = whiteIp
 		lock.Unlock()
 	} else {
-		log.Warn("%s=%v,parse err", ipmatch, whiteIp)
+		log.Warnf("%s=%v,parse err", ipmatch, whiteIp)
 	}
 }
 
@@ -321,7 +321,7 @@ func DeleteIPs(ipmatchs []string) {
 		if ip != nil {
 			delete(_TrustFilterMap, string(ip))
 		} else {
-			log.Warn("ip:%s,parse err", ipmatch)
+			log.Warnf("ip:%s,parse err", ipmatch)
 		}
 	}
 	lock.Unlock()
