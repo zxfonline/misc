@@ -22,7 +22,7 @@ func Init(enableTracing bool, checkip bool) {
 }
 
 // EnableTracing controls whether to trace using the golang.org/x/net/trace package.
-var EnableTracing = true
+var EnableTracing = false
 
 //ProxyTrace 跟踪
 type ProxyTrace struct {
@@ -46,17 +46,17 @@ func TraceFinish(pt *ProxyTrace) {
 	}
 }
 
-func TraceFinishWithExpvar(pt *ProxyTrace, tracedefer func(*expvar.Map, int64)) {
+func TraceFinishWithExpvar(pt *ProxyTrace, traceDefer func(*expvar.Map, int64)) {
 	if pt != nil {
 		if pt.tr != nil {
 			pt.tr.Finish()
-			if tracedefer != nil {
+			if traceDefer != nil {
 				family := pt.tr.GetFamily()
 				req := expvar.Get(family)
 				if req == nil {
 					req = expvar.NewMap(family)
 				}
-				tracedefer(req.(*expvar.Map), pt.tr.GetElapsedTime())
+				traceDefer(req.(*expvar.Map), pt.tr.GetElapsedTime())
 			}
 		}
 	}

@@ -788,6 +788,7 @@ type trace struct {
 
 func (tr *trace) reset() {
 	// Clear all but the mutex. Mutexes may not be copied, even when unlocked.
+	tr.ID = 0
 	tr.Family = ""
 	tr.Title = ""
 	tr.Start = time.Time{}

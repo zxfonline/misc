@@ -9,10 +9,14 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/zxfonline/misc/golangtrace"
+
 	"github.com/zxfonline/misc/chanutil"
 
+	"github.com/zxfonline/misc/expvar"
 	"github.com/zxfonline/misc/log"
 	"github.com/zxfonline/misc/timefix"
+	"github.com/zxfonline/misc/trace"
 )
 
 var _sessionID int64
@@ -83,6 +87,7 @@ type TCPSession struct {
 
 	EncodeKey []byte
 	DecodeKey []byte
+	tr        golangtrace.Trace
 }
 
 //filter:true 过滤成功，抛弃该报文；false:过滤失败，继续执行该报文消息
@@ -415,4 +420,40 @@ func (s *TCPSession) ParsePacket(pkt []byte) *NetPacket {
 	}
 	msgId := binary.BigEndian.Uint16(data[:MSG_ID_SIZE])
 	return &NetPacket{msgId, data[MSG_ID_SIZE:], s}
+}
+
+func (s *TCPSession) TraceStart(family, title string) {
+	if trace.EnableTracing {
+		s.TraceFinish(nil)
+		s.tr = golangtrace.New(family, title, false)
+	}
+}
+
+func (s *TCPSession) TraceFinish(traceDefer func(*expvar.Map, int64)) {
+	if s.tr != nil {
+		tt := s.tr
+		tt.Finish()
+		if traceDefer != nil {
+			family := tt.GetFamily()
+			req := expvar.Get(family)
+			if req == nil {
+				req = expvar.NewMap(family)
+			}
+			traceDefer(req.(*expvar.Map), tt.GetElapsedTime())
+		}
+		s.tr = nil
+	}
+}
+
+func (s *TCPSession) TracePrintf(format string, a ...interface{}) {
+	if s.tr != nil {
+		s.tr.LazyPrintf(format, a...)
+	}
+}
+
+func (s *TCPSession) TraceErrorf(format string, a ...interface{}) {
+	if s.tr != nil {
+		s.tr.LazyPrintf(format, a...)
+		s.tr.SetError()
+	}
 }
