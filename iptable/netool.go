@@ -26,8 +26,8 @@ var (
 	//子网掩码 默认"255, 255, 255, 0"
 	InterMask net.IPMask = net.IPv4Mask(255, 255, 255, 0)
 	//默认网关 默认"127, 0, 0, 0"
-	InterIPNet      net.IP = net.IPv4(192, 168, 1, 0)
-	InterExternalIp        = net.IPv4(192, 168, 1, 0)
+	InterIPNet      net.IP = net.IPv4(192, 168, 0, 0)
+	InterExternalIp        = net.IPv4(192, 168, 0, 0)
 
 	//是否检测ip的安全性(不对外的http服务，可以不用检测)
 	CHECK_IPTRUSTED = true
