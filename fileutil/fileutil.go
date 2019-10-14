@@ -33,7 +33,7 @@ var (
 
 func init() {
 	wd, _ := os.Getwd()
-	log.Infof("execute path:%v", wd)
+	fmt.Println("execute path:", wd)
 	arg0 := path.Clean(os.Args[0])
 	var exeFile string
 	if strings.HasPrefix(arg0, "/") {
@@ -55,8 +55,8 @@ func init() {
 	if wdDir != exeLastDir { //3：可执行文件上一级目录
 		defaultDirs = append(defaultDirs, exeLastDir)
 	}
-	log.Infof("default file base dirs:%v", defaultDirs)
-	SetOSEnv(EnvGoExeName, exeName)
+	fmt.Println("default file base dirs:", defaultDirs)
+	os.Setenv(EnvGoExeName, exeName)
 	ExeName = exeName
 }
 

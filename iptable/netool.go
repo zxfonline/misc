@@ -38,7 +38,7 @@ var (
 func init() {
 	go func() {
 		defer func() {
-			log.Infof("DEFAULT LOCAL IP MASK: %s | %s", InterIPNet.String(), InterExternalIp.String())
+			fmt.Println("DEFAULT LOCAL IP MASK:", InterIPNet.String(), InterExternalIp.String())
 		}()
 		//初始化默认网关
 		// ipStr := GetLocalInternalIp()

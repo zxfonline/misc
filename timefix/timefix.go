@@ -5,8 +5,6 @@ import (
 	"regexp"
 	"strconv"
 	"time"
-
-	"github.com/zxfonline/misc/log"
 )
 
 var (
@@ -25,9 +23,9 @@ func init() {
 	if local, err := time.LoadLocation("Asia/Shanghai"); err == nil && local != nil {
 		Server_Location = local
 		time.Local = Server_Location
-		log.Infof("Local:%s,servertime:%s", Server_Location, CurrentTime().Format(TimeFormate))
+		fmt.Println("Location:", Server_Location, ",serverTime:", CurrentTime().Format(TimeFormate))
 	} else {
-		log.Warn("load server location[Asia/Shanghai] error:", err)
+		fmt.Println("load server location[Asia/Shanghai] error:", err)
 	}
 }
 
