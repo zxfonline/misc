@@ -73,7 +73,7 @@ type TCPSession struct {
 	sendDelay time.Duration
 	//发送管道满后是否需要关闭连接
 	sendFullClose bool
-	closeState    chanutil.DoneChan
+	CloseState    chanutil.DoneChan
 	maxRecvSize   uint32
 	// 包频率包数
 	rpmLimit uint32
@@ -122,12 +122,12 @@ func (s *TCPSession) Send(packet *NetPacket) bool {
 				log.Warnf("session send process,waitChan:%d/%d,msg:%d,session:%d,remote:%s", wait, cap(s.SendChan), packet.MsgId, s.SessionId, s.RemoteAddr())
 			}
 			return true
-		case <-s.closeState:
+		case <-s.CloseState:
 			return false
 		}
 	} else { //缓存管道满了会关闭连接
 		select {
-		case <-s.closeState:
+		case <-s.CloseState:
 			return false
 		case s.SendChan <- packet:
 			if wait := len(s.SendChan); wait > cap(s.SendChan)/10*5 && wait%20 == 0 {
@@ -283,11 +283,11 @@ func (s *TCPSession) ReadLoop(filter func(*NetPacket) bool) {
 }
 
 func (s *TCPSession) Close() {
-	s.closeState.SetDone()
+	s.CloseState.SetDone()
 }
 
 func (s *TCPSession) IsClosed() bool {
-	return s.closeState.R().Done()
+	return s.CloseState.R().Done()
 }
 
 func (s *TCPSession) closeTask() {
@@ -310,7 +310,7 @@ func (s *TCPSession) SendLoop() {
 		select {
 		case packet := <-s.SendChan:
 			s.DirectSend(packet)
-		case <-s.closeState:
+		case <-s.CloseState:
 			s.closeTask()
 			return
 		}
@@ -393,7 +393,7 @@ func NewSession(conn NetConnIF, readChan, sendChan chan *NetPacket, offChan chan
 		sendFullClose: true,
 		maxRecvSize:   10 * 1024,
 		OnLineTime:    timefix.SecondTime(),
-		closeState:    chanutil.NewDoneChan(),
+		CloseState:    chanutil.NewDoneChan(),
 	}
 	return s
 }
