@@ -116,7 +116,7 @@ func PrintIpFilte() {
 		}
 		count++
 	}
-	log.Info(bb.String())
+	fmt.Println(bb.String())
 }
 
 //ParseFilterIp 获取匹配ip模板

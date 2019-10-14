@@ -7,8 +7,6 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-
-	"github.com/zxfonline/misc/log"
 )
 
 const (
@@ -56,7 +54,7 @@ func init() {
 		defaultDirs = append(defaultDirs, exeLastDir)
 	}
 	fmt.Println("default file base dirs:", defaultDirs)
-	os.Setenv(EnvGoExeName, exeName)
+	SetOSEnv(EnvGoExeName, exeName)
 	ExeName = exeName
 }
 
@@ -64,10 +62,10 @@ func init() {
 func SetOSEnv(option, value string) {
 	if old, ok := os.LookupEnv(option); ok {
 		os.Setenv(option, value)
-		log.Infof("update sys env [%s=%s] ==>[%s=%s]", option, old, option, value)
+		fmt.Println(fmt.Sprintf("update sys env [%s=%s] ==>[%s=%s]", option, old, option, value))
 	} else {
 		os.Setenv(option, value)
-		log.Infof("set sys env [%s=%s]", option, value)
+		fmt.Println(fmt.Sprintf("set sys env [%s=%s]", option, value))
 	}
 }
 
