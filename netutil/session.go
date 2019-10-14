@@ -422,10 +422,10 @@ func (s *TCPSession) ParsePacket(pkt []byte) *NetPacket {
 	return &NetPacket{msgId, data[MSG_ID_SIZE:], s}
 }
 
-func (s *TCPSession) TraceStart(family, title string) {
+func (s *TCPSession) TraceStart(family, title string, expvar bool) {
 	if trace.EnableTracing {
 		s.TraceFinish(nil)
-		s.tr = golangtrace.New(family, title, false)
+		s.tr = golangtrace.New(family, title, expvar)
 	}
 }
 
