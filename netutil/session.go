@@ -71,6 +71,8 @@ type TCPSession struct {
 
 	readDelay time.Duration
 	sendDelay time.Duration
+	// Declares how many times we will try to resend message
+	MaxSendRetries int
 	//发送管道满后是否需要关闭连接
 	sendFullClose bool
 	CloseState    chanutil.DoneChan
@@ -308,18 +310,18 @@ func (s *TCPSession) SendLoop() {
 
 	for {
 		select {
-		case packet := <-s.SendChan:
-			s.DirectSend(packet)
 		case <-s.CloseState:
 			s.closeTask()
 			return
+		case packet := <-s.SendChan:
+			s.DirectSend(packet)
 		}
 	}
 }
 
-func (s *TCPSession) DirectSend(packet *NetPacket) {
+func (s *TCPSession) DirectSend(packet *NetPacket) bool {
 	if packet == nil {
-		return
+		return true
 	}
 	packLen := uint32(len(packet.Data) + MSG_ID_SIZE)
 
@@ -348,16 +350,45 @@ func (s *TCPSession) DirectSend(packet *NetPacket) {
 		s.Flag |= SESS_ENCRYPT
 	}
 
+	err := s.performSend(s.sendCache[:HEAD_SIZE+packLen], 0)
+	if err != nil {
+		log.Warnf("error writing msg,session:%d,remote:%s,err:%v", s.SessionId, s.RemoteAddr(), err)
+		s.Close()
+		return false
+	}
+	return true
+}
+
+func (s *TCPSession) performSend(data []byte, sendRetries int) error {
 	// 写超时
 	if s.sendDelay > 0 {
 		s.Conn.SetWriteDeadline(time.Now().Add(s.sendDelay))
 	}
 
-	n, err := s.Conn.Write(s.sendCache[:HEAD_SIZE+packLen])
+	_, err := s.Conn.Write(data)
 	if err != nil {
-		log.Warnf("error writing msg,bytes:%d,session:%d,remote:%s,err:%v", n, s.SessionId, s.RemoteAddr(), err)
-		s.Close()
+		return s.processSendError(err, data, sendRetries)
 	}
+	return nil
+}
+
+func (s *TCPSession) processSendError(err error, data []byte, sendRetries int) error {
+	netErr, ok := err.(net.Error)
+	if !ok {
+		return err
+	}
+
+	if s.isNeedToResendMessage(netErr, sendRetries) {
+		return s.performSend(data, sendRetries+1)
+	}
+	//if !netErr.Temporary() {
+	//	//重连,让外部来重连吧
+	//}
+	return err
+}
+
+func (s *TCPSession) isNeedToResendMessage(err net.Error, sendRetries int) bool {
+	return (err.Temporary() || err.Timeout()) && sendRetries < s.MaxSendRetries
 }
 
 // 设置链接参数
