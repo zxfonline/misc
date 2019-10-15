@@ -199,9 +199,9 @@ func (s *TCPSession) ReadLoop(filter func(*NetPacket) bool) {
 		// 4字节包长度
 		n, err := io.ReadFull(s.Conn, header)
 		if err != nil {
-			if err != io.EOF {
-				log.Warnf("error receiving header,bytes:%d,session:%d,remote:%s,err:%v", n, s.SessionId, s.RemoteAddr(), err)
-			}
+			//if err != io.EOF {
+			//	log.Warnf("error receiving header,bytes:%d,session:%d,remote:%s,err:%v", n, s.SessionId, s.RemoteAddr(), err)
+			//}
 			return
 		}
 
@@ -424,7 +424,7 @@ func NewSession(conn NetConnIF, readChan, sendChan chan *NetPacket, offChan chan
 		SendChan:      sendChan,
 		ReadChan:      readChan,
 		OffChan:       offChan,
-		SessionId:     atomic.AddInt64(&_sessionID, -1),
+		SessionId:     atomic.AddInt64(&_sessionID, 1),
 		sendCache:     make([]byte, PACKET_LIMIT),
 		sendCacheSize: PACKET_LIMIT,
 		readDelay:     30 * time.Second,
