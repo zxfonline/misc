@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"runtime"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -90,6 +91,7 @@ type TCPSession struct {
 	EncodeKey []byte
 	DecodeKey []byte
 	tr        golangtrace.Trace
+	sendLock  sync.Mutex
 }
 
 //filter:true 过滤成功，抛弃该报文；false:过滤失败，继续执行该报文消息
@@ -229,7 +231,7 @@ func (s *TCPSession) ReadLoop(filter func(*NetPacket) bool) {
 					//rpmMsgCount++
 					//if rpmMsgCount > 3 {
 					// 发送频率过高的消息包
-					s.DirectSend(s.offLineMsg)
+					s.Send(s.offLineMsg)
 					log.Errorf("session rpm too high,%d/%d qps,session:%d,remote:%s", rpmCount, s.rpmInterval, s.SessionId, s.RemoteAddr())
 					return
 					//}
@@ -323,6 +325,12 @@ func (s *TCPSession) DirectSend(packet *NetPacket) bool {
 	if packet == nil {
 		return true
 	}
+	if s.IsClosed() {
+		return false
+	}
+	s.sendLock.Lock()
+	defer s.sendLock.Unlock()
+
 	packLen := uint32(len(packet.Data) + MSG_ID_SIZE)
 
 	if packLen > s.sendCacheSize {
