@@ -231,7 +231,7 @@ func (s *TCPSession) ReadLoop(filter func(*NetPacket) bool) {
 					//rpmMsgCount++
 					//if rpmMsgCount > 3 {
 					// 发送频率过高的消息包
-					s.Send(s.offLineMsg)
+					s.DirectSendAndClose(s.offLineMsg)
 					log.Errorf("session rpm too high,%d/%d qps,session:%d,remote:%s", rpmCount, s.rpmInterval, s.SessionId, s.RemoteAddr())
 					return
 					//}
@@ -321,6 +321,11 @@ func (s *TCPSession) SendLoop() {
 	}
 }
 
+func (s *TCPSession) DirectSendAndClose(packet *NetPacket) {
+	if s.DirectSend(packet) {
+		s.Close()
+	}
+}
 func (s *TCPSession) DirectSend(packet *NetPacket) bool {
 	if packet == nil {
 		return true
