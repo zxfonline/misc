@@ -33,6 +33,10 @@ const (
 	MSG_ID_SIZE = 2
 )
 
+var (
+	ServerEndian = binary.LittleEndian
+)
+
 const (
 	SESS_KEYEXCG = 0x1 // 是否已经交换完毕KEY
 	SESS_ENCRYPT = 0x2 // 是否可以开始加密
@@ -206,7 +210,7 @@ func (s *TCPSession) ReadLoop(filter func(*NetPacket) bool) {
 		}
 
 		// packet data
-		size := binary.BigEndian.Uint32(header)
+		size := ServerEndian.Uint32(header)
 		if s.maxRecvSize != 0 && size > s.maxRecvSize {
 			log.Warnf("error receiving,size:%d,session:%d,remote:%s", size, s.SessionId, s.RemoteAddr())
 			return
@@ -251,7 +255,7 @@ func (s *TCPSession) ReadLoop(filter func(*NetPacket) bool) {
 			decoder.XORKeyStream(data, data)
 		}
 
-		msgId := binary.BigEndian.Uint16(data[:MSG_ID_SIZE])
+		msgId := ServerEndian.Uint16(data[:MSG_ID_SIZE])
 
 		pack := &NetPacket{msgId, data[MSG_ID_SIZE:], s}
 
@@ -344,10 +348,10 @@ func (s *TCPSession) DirectSend(packet *NetPacket) bool {
 	}
 
 	// 4字节包长度
-	binary.BigEndian.PutUint32(s.sendCache, packLen)
+	ServerEndian.PutUint32(s.sendCache, packLen)
 
 	// 2字节消息id
-	binary.BigEndian.PutUint16(s.sendCache[HEAD_SIZE:], packet.MsgId)
+	ServerEndian.PutUint16(s.sendCache[HEAD_SIZE:], packet.MsgId)
 
 	copy(s.sendCache[HEAD_SIZE+MSG_ID_SIZE:], packet.Data)
 
@@ -450,7 +454,7 @@ func (s *TCPSession) ParsePacket(pkt []byte) *NetPacket {
 	}
 	// 4字节包长度
 	// packet data
-	size := binary.BigEndian.Uint32(pkt[:HEAD_SIZE])
+	size := ServerEndian.Uint32(pkt[:HEAD_SIZE])
 
 	if (s.maxRecvSize != 0 && size > s.maxRecvSize) || int(size) < MSG_ID_SIZE || int(size)+HEAD_SIZE != len(pkt) {
 		log.Warnf("error parse packet,bytes:%d,size:%d,session:%d,remote:%s", len(pkt), size, s.SessionId, s.RemoteAddr())
@@ -462,7 +466,7 @@ func (s *TCPSession) ParsePacket(pkt []byte) *NetPacket {
 		decoder, _ := rc4.NewCipher(s.DecodeKey)
 		decoder.XORKeyStream(data, data)
 	}
-	msgId := binary.BigEndian.Uint16(data[:MSG_ID_SIZE])
+	msgId := ServerEndian.Uint16(data[:MSG_ID_SIZE])
 	return &NetPacket{msgId, data[MSG_ID_SIZE:], s}
 }
 
