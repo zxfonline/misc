@@ -211,15 +211,13 @@ func (s *TCPSession) ReadLoop(filter func(*NetPacket) bool) {
 
 		// packet data
 		size := ServerEndian.Uint32(header)
-		log.Debugf("header:%+v", header)
 		if s.maxRecvSize != 0 && size > s.maxRecvSize {
-			log.Warnf("error receiving,size:%d,session:%d,remote:%s", size, s.SessionId, s.RemoteAddr())
+			log.Warnf("error receiving,size:%d,head:%+v,session:%d,remote:%s", size, header, s.SessionId, s.RemoteAddr())
 			return
 		}
 
 		data := make([]byte, size)
 		n, err = io.ReadFull(s.Conn, data)
-		log.Debugf("body:%+v", data)
 		if err != nil || size < MSG_ID_SIZE {
 			log.Warnf("error receiving body,bytes:%d,size:%d,session:%d,remote:%s,err:%v", n, size, s.SessionId, s.RemoteAddr(), err)
 			return
