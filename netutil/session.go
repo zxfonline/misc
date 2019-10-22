@@ -363,7 +363,7 @@ func (s *TCPSession) DirectSend(packet *NetPacket) bool {
 
 		encoder.XORKeyStream(data, data)
 	} else if s.Flag&SESS_KEYEXCG != 0 { // key is exchanged, encryption is not yet enabled
-		s.Flag &^= SESS_KEYEXCG
+		//s.Flag &^= SESS_KEYEXCG
 		s.Flag |= SESS_ENCRYPT
 	}
 
