@@ -1,7 +1,11 @@
 package log
 
 import (
+	"bytes"
+	"fmt"
 	"os"
+	"path/filepath"
+	"regexp"
 	"runtime"
 
 	log "github.com/sirupsen/logrus"
@@ -137,33 +141,55 @@ func Panicln(args ...interface{}) {
 //use for defer recover
 func PrintPanicStack() {
 	if x := recover(); x != nil {
-		buf := make([]byte, 4<<20) // 4 KB should be enough
-		n := runtime.Stack(buf, false)
-		Logger.Errorf("Recovered %v\nStack:%s", x, buf[:n])
+		Logger.Errorf("Recovered %v,Stack:%s", x, DumpStack(1))
 	}
 }
 
-//print dump stack
+var MiscRegexp = regexp.MustCompile(`zxfonline/misc(@.*)?/log/.*.go`)
+var LogrusRegexp = regexp.MustCompile(`sirupsen/logrus(@.*)?/.*.go`)
+
+var SuffixesToIgnoreArray = []*regexp.Regexp{
+	MiscRegexp,
+	LogrusRegexp,
+}
+
+func DumpStack(callDepth uint) string {
+	var buff bytes.Buffer
+	for i := callDepth + 1; ; i++ {
+		/*funcName*/ _, file, line, ok := runtime.Caller(i)
+		if !ok {
+			break
+		}
+		for _, s := range SuffixesToIgnoreArray {
+			if s.MatchString(file) {
+				break
+			}
+		}
+		//buff.WriteString(fmt.Sprintf(" %d:%s[%s:%d]", i, runtime.FuncForPC(funcName).Name(), filepath.Base(file), line))
+		buff.WriteString(fmt.Sprintf(" %d:[%s:%d]", i, filepath.Base(file), line))
+	}
+	return buff.String()
+}
+
 func LogStack(level log.Level) {
 	if !Logger.IsLevelEnabled(level) {
 		return
 	}
-	buf := make([]byte, 4<<20) // 4 KB should be enough
-	n := runtime.Stack(buf, false)
+	stack := DumpStack(1)
 	switch level {
 	case log.PanicLevel:
-		Logger.Panicf("Stack:%s", buf[:n])
+		Logger.Panicf("Stack:%s", stack)
 	case log.FatalLevel:
-		Logger.Fatalf("Stack:%s", buf[:n])
+		Logger.Fatalf("Stack:%s", stack)
 	case log.ErrorLevel:
-		Logger.Errorf("Stack:%s", buf[:n])
+		Logger.Errorf("Stack:%s", stack)
 	case log.WarnLevel:
-		Logger.Warnf("Stack:%s", buf[:n])
+		Logger.Warnf("Stack:%s", stack)
 	case log.InfoLevel:
-		Logger.Infof("Stack:%s", buf[:n])
+		Logger.Infof("Stack:%s", stack)
 	case log.DebugLevel:
-		Logger.Debugf("Stack:%s", buf[:n])
+		Logger.Debugf("Stack:%s", stack)
 	case log.TraceLevel:
-		Logger.Tracef("Stack:%s", buf[:n])
+		Logger.Tracef("Stack:%s", stack)
 	}
 }
