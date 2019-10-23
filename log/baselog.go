@@ -141,7 +141,7 @@ func Panicln(args ...interface{}) {
 //use for defer recover
 func PrintPanicStack() {
 	if x := recover(); x != nil {
-		Logger.Errorf("Recovered %v,Stack:%s", x, DumpStack(1))
+		Logger.Errorf("Recovered %v,Stack:%s", x, dumpStack(2))
 	}
 }
 
@@ -153,7 +153,11 @@ var SuffixesToIgnoreArray = []*regexp.Regexp{
 	LogrusRegexp,
 }
 
-func DumpStack(callDepth int) string {
+func DumpStack() string {
+	return dumpStack(0)
+}
+
+func dumpStack(callDepth int) string {
 	var buff bytes.Buffer
 	for i := callDepth + 1; ; i++ {
 		/*funcName*/ _, file, line, ok := runtime.Caller(i)
@@ -166,7 +170,7 @@ func DumpStack(callDepth int) string {
 			}
 		}
 		//buff.WriteString(fmt.Sprintf(" %d:%s[%s:%d]", i, runtime.FuncForPC(funcName).Name(), filepath.Base(file), line))
-		buff.WriteString(fmt.Sprintf(" %d:[%s:%d]", i, filepath.Base(file), line))
+		buff.WriteString(fmt.Sprintf(" %d:[%s:%d]", i-callDepth, filepath.Base(file), line))
 	}
 	return buff.String()
 }
@@ -175,7 +179,7 @@ func LogStack(level log.Level) {
 	if !Logger.IsLevelEnabled(level) {
 		return
 	}
-	stack := DumpStack(1)
+	stack := dumpStack(1)
 	switch level {
 	case log.PanicLevel:
 		Logger.Panicf("Stack:%s", stack)
