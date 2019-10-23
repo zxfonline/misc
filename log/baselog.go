@@ -153,7 +153,7 @@ var SuffixesToIgnoreArray = []*regexp.Regexp{
 	LogrusRegexp,
 }
 
-func DumpStack(callDepth uint) string {
+func DumpStack(callDepth int) string {
 	var buff bytes.Buffer
 	for i := callDepth + 1; ; i++ {
 		/*funcName*/ _, file, line, ok := runtime.Caller(i)
