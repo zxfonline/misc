@@ -155,7 +155,7 @@ var SuffixesToIgnoreArray = []*regexp.Regexp{
 }
 
 func DumpStack() string {
-	return dumpStack(0)
+	return dumpStack(1)
 }
 
 var (
