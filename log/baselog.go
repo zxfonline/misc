@@ -3,29 +3,30 @@ package log
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"regexp"
 	"runtime"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
-var Logger *log.Logger
+var Logger *logrus.Logger
 
 func init() {
 	// Log as JSON instead of the default ASCII formatter.
-	//log.SetFormatter(&log.JSONFormatter{})
+	//logrus.SetFormatter(&logrus.JSONFormatter{})
 
 	// Output to stdout instead of the default stderr
 	// Can be any io.Writer, see below for File example
-	log.SetOutput(os.Stdout)
+	logrus.SetOutput(os.Stdout)
 
 	// Only log the warning severity or above.
-	log.SetLevel(log.TraceLevel)
+	logrus.SetLevel(logrus.TraceLevel)
 
-	//log.SetReportCaller(true)
-	Logger = log.StandardLogger()
+	//logrus.SetReportCaller(true)
+	Logger = logrus.StandardLogger()
 }
 
 func Trace(args ...interface{}) {
@@ -157,6 +158,11 @@ func DumpStack() string {
 	return dumpStack(0)
 }
 
+var (
+	// Stores the flags
+	DumpFlags int = log.Lshortfile
+)
+
 func dumpStack(callDepth int) string {
 	var buff bytes.Buffer
 	for i := callDepth + 1; ; i++ {
@@ -169,31 +175,34 @@ func dumpStack(callDepth int) string {
 				break
 			}
 		}
-		//buff.WriteString(fmt.Sprintf(" %d:%s[%s:%d]", i, runtime.FuncForPC(funcName).Name(), filepath.Base(file), line))
-		buff.WriteString(fmt.Sprintf(" %d:[%s:%d]", i-callDepth, filepath.Base(file), line))
+		if DumpFlags == log.Lshortfile {
+			buff.WriteString(fmt.Sprintf(" %d:[%s:%d]", i-callDepth, filepath.Base(file), line))
+		} else {
+			buff.WriteString(fmt.Sprintf(" %d:[%s:%d]", i-callDepth, file, line))
+		}
 	}
 	return buff.String()
 }
 
-func LogStack(level log.Level) {
+func LogStack(level logrus.Level) {
 	if !Logger.IsLevelEnabled(level) {
 		return
 	}
 	stack := dumpStack(1)
 	switch level {
-	case log.PanicLevel:
+	case logrus.PanicLevel:
 		Logger.Panicf("Stack:%s", stack)
-	case log.FatalLevel:
+	case logrus.FatalLevel:
 		Logger.Fatalf("Stack:%s", stack)
-	case log.ErrorLevel:
+	case logrus.ErrorLevel:
 		Logger.Errorf("Stack:%s", stack)
-	case log.WarnLevel:
+	case logrus.WarnLevel:
 		Logger.Warnf("Stack:%s", stack)
-	case log.InfoLevel:
+	case logrus.InfoLevel:
 		Logger.Infof("Stack:%s", stack)
-	case log.DebugLevel:
+	case logrus.DebugLevel:
 		Logger.Debugf("Stack:%s", stack)
-	case log.TraceLevel:
+	case logrus.TraceLevel:
 		Logger.Tracef("Stack:%s", stack)
 	}
 }
