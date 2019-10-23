@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"io"
 	"net"
-	"runtime"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -166,17 +165,8 @@ func (s *TCPSession) SetCipher(encodeKey, decodeKey []byte) error {
 	return nil
 }
 
-//use for defer recover
-func PrintPanicStack() {
-	if x := recover(); x != nil {
-		buf := make([]byte, 4<<20) // 4 KB should be enough
-		n := runtime.Stack(buf, false)
-		log.Errorf("Recovered %v\nStack:%s", x, buf[:n])
-	}
-}
-
 func (s *TCPSession) ReadLoop(filter func(*NetPacket) bool) {
-	defer PrintPanicStack()
+	defer log.PrintPanicStack()
 
 	// 关闭发送
 	defer s.Close()
@@ -312,7 +302,7 @@ func (s *TCPSession) closeTask() {
 	s.Conn.Close()
 }
 func (s *TCPSession) SendLoop() {
-	defer PrintPanicStack()
+	defer log.PrintPanicStack()
 
 	for {
 		select {
@@ -447,7 +437,7 @@ func NewSession(conn NetConnIF, readChan, sendChan chan *NetPacket, offChan chan
 }
 
 func (s *TCPSession) ParsePacket(pkt []byte) *NetPacket {
-	defer PrintPanicStack()
+	defer log.PrintPanicStack()
 	if len(pkt) <= HEAD_SIZE {
 		log.Warnf("error parse packet,bytes:%d,session:%d,remote:%s", len(pkt), s.SessionId, s.RemoteAddr())
 		return nil

@@ -171,7 +171,7 @@ func RegistHander(r reflect.Value) {
 func HandleCMD(exp string, ip string) (rs interface{}) {
 	defer func() {
 		if e := recover(); e != nil {
-			log.Errorf("HandleGM[exp=%s],ip:%v,err:%+v", exp, ip, e)
+			log.Errorf("HandleGM[exp=%s],ip:%v,err:%v,stack:%s", exp, ip, e, log.DumpStack())
 			rs = gerror.NewError(gerror.SERVER_CMSG_ERROR, fmt.Sprintf("%v", e))
 		}
 	}()

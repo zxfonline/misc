@@ -181,13 +181,13 @@ func working() {
 	defer func() {
 		if !Closed() {
 			if e := recover(); e != nil {
-				log.Errorf("recover err:%+v", e)
+				log.Errorf("recover err:%v,stack:%s", e, log.DumpStack())
 			}
 			log.Info("restart db timer")
 			go working()
 		} else {
 			if e := recover(); e != nil {
-				log.Warnf("recover err:%+v", e)
+				log.Warnf("recover err:%v,stack:%s", e, log.DumpStack())
 			}
 		}
 	}()

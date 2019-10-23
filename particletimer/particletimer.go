@@ -132,7 +132,7 @@ func _trigger(level uint) {
 				func(tk int64, tv *_timer_event) {
 					defer func() {
 						if err := recover(); err != nil {
-							log.Errorf("TRIGGER err:%+v channel len:%d", err, len(tv.ch))
+							log.Errorf("TRIGGER err:%v channel len:%d,stack:%s", err, len(tv.ch), log.DumpStack())
 						}
 					}()
 

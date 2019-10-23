@@ -74,7 +74,7 @@ func (t *TaskService) Call() {
 	}
 	defer func() {
 		if e := recover(); e != nil {
-			log.Errorf("recover task service error:%v", e)
+			log.Errorf("recover task service err:%v,stack:%s", e, log.DumpStack())
 		}
 	}()
 	t.callback(t.args...)
