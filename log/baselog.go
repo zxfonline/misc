@@ -3,6 +3,7 @@ package log
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -27,6 +28,11 @@ func init() {
 
 	//logrus.SetReportCaller(true)
 	Logger = logrus.StandardLogger()
+}
+
+// SetOutput sets the logger output.
+func SetOutput(output io.Writer) {
+	Logger.SetOutput(output)
 }
 
 func Trace(args ...interface{}) {
