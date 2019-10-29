@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/zxfonline/misc/chanutil"
+	"github.com/zxfonline/misc/expvar"
 	"github.com/zxfonline/misc/log"
 
 	"github.com/zxfonline/misc/gerror"
@@ -37,6 +38,7 @@ func SetGExcutor(excutor Excutor) {
 		panic(errors.New("_GExcutor has been inited"))
 	}
 	_GExcutor = excutor
+	expvar.RegistChanMonitor("chanGTaskExcutor", _GExcutor)
 }
 func NewTaskExcutor(chanSize int) TaskExcutor {
 	return make(chan *TaskService, chanSize)
@@ -199,6 +201,7 @@ type MultiplePoolExcutor struct {
 func NewTaskPoolExcutor(poolSize, chanSize uint, shutdownNow bool, shutdownWait time.Duration) Excutor {
 	wgExcutor := &sync.WaitGroup{}
 	taskchan := make(chan *TaskService, chanSize)
+	expvar.RegistChanMonitor("chanMultiExcutor", taskchan)
 	waitD := chanutil.NewDoneChan()
 	p := &MultiplePoolExcutor{
 		excutors:     list.New(),

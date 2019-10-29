@@ -68,9 +68,6 @@ func RegistChanMonitor(name string, chanptr interface{}) bool {
 	}
 	monitorLock.Lock()
 	defer monitorLock.Unlock()
-	if monitorChanMap[name] != nil {
-		return false
-	}
 	monitorChanMap[name] = chanptr
 	return true
 }

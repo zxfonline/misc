@@ -10,6 +10,7 @@ import (
 
 	"fmt"
 
+	"github.com/zxfonline/misc/expvar"
 	"github.com/zxfonline/misc/log"
 
 	"github.com/zxfonline/misc/chanutil"
@@ -173,6 +174,7 @@ func StartTimers(data *bytes.Buffer, excutor taskexcutor.Excutor) func() {
 		rescheduleTimers(info)
 		log.Info("start db timer")
 		go working()
+		expvar.RegistChanMonitor("chanDBTimer", timer_ch)
 	}
 }
 
