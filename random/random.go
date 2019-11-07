@@ -8,10 +8,6 @@ import (
 	"time"
 )
 
-var (
-	_random = rand.New(rand.NewSource(time.Now().UnixNano()))
-)
-
 func RandInt32(min int32, max int32) int32 {
 	if max <= min {
 		max = min + 1
@@ -22,7 +18,7 @@ func RandInt32(min int32, max int32) int32 {
 		min += base
 		max += base
 	}
-	return -base + min + _random.Int31n(max-min)
+	return -base + min + rand.New(rand.NewSource(time.Now().UnixNano())).Int31n(max-min)
 }
 func RandInt64(min int64, max int64) int64 {
 	if max <= min {
@@ -34,7 +30,7 @@ func RandInt64(min int64, max int64) int64 {
 		min += base
 		max += base
 	}
-	return -base + min + _random.Int63n(max-min)
+	return -base + min + rand.New(rand.NewSource(time.Now().UnixNano())).Int63n(max-min)
 }
 func RandInt(min int, max int) int {
 	if max <= min {
@@ -46,7 +42,7 @@ func RandInt(min int, max int) int {
 		min += base
 		max += base
 	}
-	return -base + min + _random.Intn(max-min)
+	return -base + min + rand.New(rand.NewSource(time.Now().UnixNano())).Intn(max-min)
 }
 
 //func main() {
@@ -77,7 +73,7 @@ func GetRandomValues(numbers []int, n int) []int {
 	}
 	list := make([]int, 0, n)
 	for i := 0; i < n; i++ {
-		index := _random.Intn(len(filter))
+		index := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(len(filter))
 		list = append(list, filter[index])
 		filter = append(filter[:index], filter[index+1:]...)
 	}
@@ -100,7 +96,7 @@ func GetRandomValuesInt64(numbers []int64, n int) []int64 {
 	}
 	list := make([]int64, 0, n)
 	for i := 0; i < n; i++ {
-		index := _random.Intn(len(filter))
+		index := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(len(filter))
 		list = append(list, filter[index])
 		filter = append(filter[:index], filter[index+1:]...)
 	}
@@ -142,7 +138,7 @@ func GetRandomNumbers(args string, radom *rand.Rand) []int {
  */
 func GetRandomNumber(args string, n int, radom *rand.Rand) []int {
 	if radom == nil {
-		radom = _random
+		radom = rand.New(rand.NewSource(time.Now().UnixNano()))
 	}
 	var err error
 	//	if strings.Index(args, ",") > 0 {
@@ -229,7 +225,7 @@ type RandItem struct {
 
 func GetRandomItems(items []RandItem, n int, radom *rand.Rand) []RandItem {
 	if radom == nil {
-		radom = _random
+		radom = rand.New(rand.NewSource(time.Now().UnixNano()))
 	}
 	size := len(items)
 	if n > size {
@@ -267,7 +263,7 @@ type RandInterface interface {
 //GetRandomWeight 随机数选取
 func GetRandomWeight(data RandInterface, n int, radom *rand.Rand) interface{} {
 	if radom == nil {
-		radom = _random
+		radom = rand.New(rand.NewSource(time.Now().UnixNano()))
 	}
 	size := data.Len()
 	if n > size {

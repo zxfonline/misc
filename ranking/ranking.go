@@ -24,10 +24,6 @@ var (
 	_Lock sync.RWMutex
 )
 
-var (
-	_random = rand.New(rand.NewSource(time.Now().UnixNano()))
-)
-
 type RankInfo struct {
 	Id        int64
 	Val       int64
@@ -99,7 +95,7 @@ func newSkiplist() *skiplist {
 
 func randomLevel() int32 {
 	lvl := int32(1)
-	for _random.Float32() < SKIPLIST_P && lvl < SKIPLIST_MAXLEVEL {
+	for rand.New(rand.NewSource(time.Now().UnixNano())).Float32() < SKIPLIST_P && lvl < SKIPLIST_MAXLEVEL {
 		lvl++
 	}
 	return lvl
