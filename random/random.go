@@ -18,6 +18,9 @@ func RandInt32(min int32, max int32, randz *rand.Rand) int32 {
 		min += base
 		max += base
 	}
+	if randz == nil {
+		randz = rand.New(rand.NewSource(time.Now().UnixNano()))
+	}
 	return -base + min + randz.Int31n(max-min)
 }
 func RandInt64(min int64, max int64, randz *rand.Rand) int64 {
@@ -30,6 +33,9 @@ func RandInt64(min int64, max int64, randz *rand.Rand) int64 {
 		min += base
 		max += base
 	}
+	if randz == nil {
+		randz = rand.New(rand.NewSource(time.Now().UnixNano()))
+	}
 	return -base + min + randz.Int63n(max-min)
 }
 func RandInt(min int, max int, randz *rand.Rand) int {
@@ -41,6 +47,9 @@ func RandInt(min int, max int, randz *rand.Rand) int {
 		base = -min
 		min += base
 		max += base
+	}
+	if randz == nil {
+		randz = rand.New(rand.NewSource(time.Now().UnixNano()))
 	}
 	return -base + min + randz.Intn(max-min)
 }
@@ -64,7 +73,10 @@ func RandInt(min int, max int, randz *rand.Rand) int {
  * @param n 要随机多n个数
  * @return
  */
-func GetRandomValues(numbers []int, n int, radom *rand.Rand) []int {
+func GetRandomValues(numbers []int, n int, randz *rand.Rand) []int {
+	if randz == nil {
+		randz = rand.New(rand.NewSource(time.Now().UnixNano()))
+	}
 	size := len(numbers)
 	filter := make([]int, size)
 	copy(filter, numbers)
@@ -73,7 +85,7 @@ func GetRandomValues(numbers []int, n int, radom *rand.Rand) []int {
 	}
 	list := make([]int, 0, n)
 	for i := 0; i < n; i++ {
-		index := radom.Intn(len(filter))
+		index := randz.Intn(len(filter))
 		list = append(list, filter[index])
 		filter = append(filter[:index], filter[index+1:]...)
 	}
@@ -88,6 +100,9 @@ func GetRandomValues(numbers []int, n int, radom *rand.Rand) []int {
  * @return
  */
 func GetRandomValuesInt64(numbers []int64, n int, randz *rand.Rand) []int64 {
+	if randz == nil {
+		randz = rand.New(rand.NewSource(time.Now().UnixNano()))
+	}
 	size := len(numbers)
 	filter := make([]int64, size)
 	copy(filter, numbers)
@@ -112,6 +127,9 @@ func GetRandomValuesInt64(numbers []int64, n int, randz *rand.Rand) []int64 {
  * @return
  */
 func GetRandomNumbers(args string, randz *rand.Rand) []int {
+	if randz == nil {
+		randz = rand.New(rand.NewSource(time.Now().UnixNano()))
+	}
 	strs := strings.Split(args, "#")
 	size := len(strs)
 	ints := make([]int, 0, size)
