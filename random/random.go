@@ -5,7 +5,6 @@ import (
 	"math/rand"
 	"strconv"
 	"strings"
-	"time"
 )
 
 func RandInt32(min int32, max int32, randz *rand.Rand) int32 {
@@ -19,7 +18,7 @@ func RandInt32(min int32, max int32, randz *rand.Rand) int32 {
 		max += base
 	}
 	if randz == nil {
-		randz = rand.New(rand.NewSource(time.Now().UnixNano()))
+		randz = rand.New(rand.NewSource(int64(rand.Int31())))
 	}
 	return -base + min + randz.Int31n(max-min)
 }
@@ -34,7 +33,7 @@ func RandInt64(min int64, max int64, randz *rand.Rand) int64 {
 		max += base
 	}
 	if randz == nil {
-		randz = rand.New(rand.NewSource(time.Now().UnixNano()))
+		randz = rand.New(rand.NewSource(int64(rand.Int31())))
 	}
 	return -base + min + randz.Int63n(max-min)
 }
@@ -49,7 +48,7 @@ func RandInt(min int, max int, randz *rand.Rand) int {
 		max += base
 	}
 	if randz == nil {
-		randz = rand.New(rand.NewSource(time.Now().UnixNano()))
+		randz = rand.New(rand.NewSource(int64(rand.Int31())))
 	}
 	return -base + min + randz.Intn(max-min)
 }
@@ -75,7 +74,7 @@ func RandInt(min int, max int, randz *rand.Rand) int {
  */
 func GetRandomValues(numbers []int, n int, randz *rand.Rand) []int {
 	if randz == nil {
-		randz = rand.New(rand.NewSource(time.Now().UnixNano()))
+		randz = rand.New(rand.NewSource(int64(rand.Int31())))
 	}
 	size := len(numbers)
 	filter := make([]int, size)
@@ -101,7 +100,7 @@ func GetRandomValues(numbers []int, n int, randz *rand.Rand) []int {
  */
 func GetRandomValuesInt64(numbers []int64, n int, randz *rand.Rand) []int64 {
 	if randz == nil {
-		randz = rand.New(rand.NewSource(time.Now().UnixNano()))
+		randz = rand.New(rand.NewSource(int64(rand.Int31())))
 	}
 	size := len(numbers)
 	filter := make([]int64, size)
@@ -128,7 +127,7 @@ func GetRandomValuesInt64(numbers []int64, n int, randz *rand.Rand) []int64 {
  */
 func GetRandomNumbers(args string, randz *rand.Rand) []int {
 	if randz == nil {
-		randz = rand.New(rand.NewSource(time.Now().UnixNano()))
+		randz = rand.New(rand.NewSource(int64(rand.Int31())))
 	}
 	strs := strings.Split(args, "#")
 	size := len(strs)
@@ -156,7 +155,7 @@ func GetRandomNumbers(args string, randz *rand.Rand) []int {
  */
 func GetRandomNumber(args string, n int, randz *rand.Rand) []int {
 	if randz == nil {
-		randz = rand.New(rand.NewSource(time.Now().UnixNano()))
+		randz = rand.New(rand.NewSource(int64(rand.Int31())))
 	}
 	var err error
 	//	if strings.Index(args, ",") > 0 {
@@ -243,7 +242,7 @@ type RandItem struct {
 
 func GetRandomItems(items []RandItem, n int, randz *rand.Rand) []RandItem {
 	if randz == nil {
-		randz = rand.New(rand.NewSource(time.Now().UnixNano()))
+		randz = rand.New(rand.NewSource(int64(rand.Int31())))
 	}
 	size := len(items)
 	if n > size {
@@ -281,7 +280,7 @@ type RandInterface interface {
 //GetRandomWeight 随机数选取
 func GetRandomWeight(data RandInterface, n int, randz *rand.Rand) interface{} {
 	if randz == nil {
-		randz = rand.New(rand.NewSource(time.Now().UnixNano()))
+		randz = rand.New(rand.NewSource(int64(rand.Int31())))
 	}
 	size := data.Len()
 	if n > size {
