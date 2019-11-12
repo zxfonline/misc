@@ -1,0 +1,16 @@
+{
+	// url to the site
+	"url": "http://google.com",
+
+	"methods": ["GET", "POST"], // supported methods
+
+	"always_load": true,
+
+	// nested structure with different types
+	"module": {
+		"name": "Welcome",
+		"route": "/",
+		 //我是注释
+		"port": 8080
+	}
+}
