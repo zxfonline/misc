@@ -130,12 +130,12 @@ func DeltaDays(unix1, unix2 int64) int64 {
 	return days
 }
 
-//S2UnixTime date format: "2006-01-02 13:04:00"
+//S2UnixTime date format: "2006-01-02 15:04:05"
 func S2UnixTime(value string, loc *time.Location) (*time.Time, error) {
 	re := regexp.MustCompile(`([\d]+)-([\d]+)-([\d]+) ([\d]+):([\d]+):([\d]+)`)
 	slices := re.FindStringSubmatch(value)
 	if slices == nil || len(slices) != 7 {
-		return nil, fmt.Errorf("time[%s] format error, expect format: 2006-01-02 13:04:00 \n", value)
+		return nil, fmt.Errorf("time[%s] format error, expect format: 2006-01-02 15:04:05 \n", value)
 	}
 	year, _ := strconv.Atoi(slices[1])
 	month, _ := strconv.Atoi(slices[2])
