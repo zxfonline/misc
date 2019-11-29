@@ -52,15 +52,15 @@ import (
 	"github.com/zxfonline/misc/json"
 
 	"github.com/zxfonline/misc/log"
+	"gopkg.in/yaml.v2"
 )
 
 var DefaultSetting = BeegoHTTPSettings{
 	UserAgent:        "TW Server",
-	ConnectTimeout:   10 * time.Second,
-	ReadWriteTimeout: 10 * time.Second,
+	ConnectTimeout:   15 * time.Second,
+	ReadWriteTimeout: 15 * time.Second,
 	Gzip:             true,
 	DumpBody:         true,
-	Retries:          3,
 }
 
 var defaultCookieJar http.CookieJar
@@ -321,6 +321,34 @@ func (b *BeegoHTTPRequest) Body(data interface{}) *BeegoHTTPRequest {
 	return b
 }
 
+// XMLBody adds request raw body encoding by XML.
+func (b *BeegoHTTPRequest) XMLBody(obj interface{}) (*BeegoHTTPRequest, error) {
+	if b.req.Body == nil && obj != nil {
+		byts, err := xml.Marshal(obj)
+		if err != nil {
+			return b, err
+		}
+		b.req.Body = ioutil.NopCloser(bytes.NewReader(byts))
+		b.req.ContentLength = int64(len(byts))
+		b.req.Header.Set("Content-Type", "application/xml")
+	}
+	return b, nil
+}
+
+// YAMLBody adds request raw body encoding by YAML.
+func (b *BeegoHTTPRequest) YAMLBody(obj interface{}) (*BeegoHTTPRequest, error) {
+	if b.req.Body == nil && obj != nil {
+		byts, err := yaml.Marshal(obj)
+		if err != nil {
+			return b, err
+		}
+		b.req.Body = ioutil.NopCloser(bytes.NewReader(byts))
+		b.req.ContentLength = int64(len(byts))
+		b.req.Header.Set("Content-Type", "application/x+yaml")
+	}
+	return b, nil
+}
+
 // JSONBody adds request raw body encoding by JSON.
 func (b *BeegoHTTPRequest) JSONBody(obj interface{}) (*BeegoHTTPRequest, error) {
 	if b.req.Body == nil && obj != nil {
@@ -338,7 +366,7 @@ func (b *BeegoHTTPRequest) JSONBody(obj interface{}) (*BeegoHTTPRequest, error) 
 func (b *BeegoHTTPRequest) buildURL(paramBody string) {
 	// build GET url with query string
 	if b.req.Method == "GET" && len(paramBody) > 0 {
-		if strings.Index(b.url, "?") != -1 {
+		if strings.Contains(b.url, "?") {
 			b.url += "&" + paramBody
 		} else {
 			b.url = b.url + "?" + paramBody
@@ -347,7 +375,7 @@ func (b *BeegoHTTPRequest) buildURL(paramBody string) {
 	}
 
 	// build POST/PUT/PATCH url and body
-	if (b.req.Method == "POST" || b.req.Method == "PUT" || b.req.Method == "PATCH") && b.req.Body == nil {
+	if (b.req.Method == "POST" || b.req.Method == "PUT" || b.req.Method == "PATCH" || b.req.Method == "DELETE") && b.req.Body == nil {
 		// with files
 		if len(b.files) > 0 {
 			pr, pw := io.Pipe()
@@ -420,12 +448,12 @@ func (b *BeegoHTTPRequest) DoRequest() (resp *http.Response, err error) {
 	}
 
 	b.buildURL(paramBody)
-	url, err := url.Parse(b.url)
+	urlParsed, err := url.Parse(b.url)
 	if err != nil {
 		return nil, err
 	}
 
-	b.req.URL = url
+	b.req.URL = urlParsed
 
 	trans := b.setting.Transport
 
@@ -435,7 +463,7 @@ func (b *BeegoHTTPRequest) DoRequest() (resp *http.Response, err error) {
 			TLSClientConfig:     b.setting.TLSClientConfig,
 			Proxy:               b.setting.Proxy,
 			Dial:                TimeoutDialer(b.setting.ConnectTimeout, b.setting.ReadWriteTimeout),
-			MaxIdleConnsPerHost: -1,
+			MaxIdleConnsPerHost: 100,
 		}
 	} else {
 		// if b.transport is *http.Transport then set the settings.
@@ -523,9 +551,9 @@ func (b *BeegoHTTPRequest) Bytes() ([]byte, error) {
 			return nil, err
 		}
 		b.body, err = ioutil.ReadAll(reader)
-	} else {
-		b.body, err = ioutil.ReadAll(resp.Body)
+		return b.body, err
 	}
+	b.body, err = ioutil.ReadAll(resp.Body)
 	return b.body, err
 }
 
@@ -568,6 +596,16 @@ func (b *BeegoHTTPRequest) ToXML(v interface{}) error {
 		return err
 	}
 	return xml.Unmarshal(data, v)
+}
+
+// ToYAML returns the map that marshals from the body bytes as yaml in response .
+// it calls Response inner.
+func (b *BeegoHTTPRequest) ToYAML(v interface{}) error {
+	data, err := b.Bytes()
+	if err != nil {
+		return err
+	}
+	return yaml.Unmarshal(data, v)
 }
 
 // Response executes request client gets response mannually.
