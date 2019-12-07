@@ -5,64 +5,53 @@ import (
 	"math/rand"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 )
 
-func RandInt32(min int32, max int32, randz *rand.Rand) int32 {
-	if max <= min {
-		max = min + 1
-	}
-	var base int32 = 0
-	if min < 0 {
-		base = -min
-		min += base
-		max += base
-	}
-	if randz == nil {
-		randz = rand.New(rand.NewSource(int64(rand.Int31())))
-	}
-	return -base + min + randz.Int31n(max-min)
-}
-func RandInt64(min int64, max int64, randz *rand.Rand) int64 {
-	if max <= min {
-		max = min + 1
-	}
-	var base int64 = 0
-	if min < 0 {
-		base = -min
-		min += base
-		max += base
-	}
-	if randz == nil {
-		randz = rand.New(rand.NewSource(int64(rand.Int31())))
-	}
-	return -base + min + randz.Int63n(max-min)
-}
-func RandInt(min int, max int, randz *rand.Rand) int {
-	if max <= min {
-		max = min + 1
-	}
-	var base int = 0
-	if min < 0 {
-		base = -min
-		min += base
-		max += base
-	}
-	if randz == nil {
-		randz = rand.New(rand.NewSource(int64(rand.Int31())))
-	}
-	return -base + min + randz.Intn(max-min)
+var (
+	//randPool    = make(chan func() (n int, input chan<- int))
+	_globalRand *rand.Rand
+	_randLock   sync.Mutex
+)
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+	_globalRand = rand.New(rand.NewSource(rand.Int63()))
+	//go func() {
+	//	for {
+	//		randFunc := <-randPool
+	//		n, output := randFunc()
+	//		output <- _globalRand.Intn(n)
+	//	}
+	//}()
 }
 
+// Intn returns, as an int, a non-negative pseudo-random number in [0,n).
+// It panics if n <= 0.
+func Intn(n int) int {
+	//output := make(chan int, 1)
+	//randPool <- func() (int, chan<- int) {
+	//	return n, output
+	//}
+	//return <-output
+	_randLock.Lock()
+	defer _randLock.Unlock()
+	return _globalRand.Intn(n)
+}
+
+//------------------------
+
 //func main() {
-//	fmt.Println(GetRandomNumber("1", 2, nil))
-//	fmt.Println(GetRandomNumber("1~10", 2, nil))
-//	fmt.Println(GetRandomNumber("1~10,44~89,2~5", 2, nil))
-//	fmt.Println(GetRandomNumber("1:20,1~4:30,4:500", 2, nil))
-//	fmt.Println(GetRandomNumber("1,2,4", 2, nil))
-//	fmt.Println(GetRandomNumber("2~10:40", 2, nil))
-//	fmt.Println(GetRandomNumber("1:40", 2, nil))
-//	fmt.Println(GetRandomNumber("1:20,1~4:30,4:500", 2, nil))
-//	fmt.Println(GetRandomNumbers("2~10:40#10:20,10~45:30,40~80:500", nil))
+//	fmt.Println(GetRandomNumber("1", 2))
+//	fmt.Println(GetRandomNumber("1~10", 2))
+//	fmt.Println(GetRandomNumber("1~10,44~89,2~5", 2))
+//	fmt.Println(GetRandomNumber("1:20,1~4:30,4:500", 2))
+//	fmt.Println(GetRandomNumber("1,2,4", 2))
+//	fmt.Println(GetRandomNumber("2~10:40", 2))
+//	fmt.Println(GetRandomNumber("1:40", 2))
+//	fmt.Println(GetRandomNumber("1:20,1~4:30,4:500", 2))
+//	fmt.Println(GetRandomNumbers("2~10:40#10:20,10~45:30,40~80:500"))
 //}
 
 /**
@@ -72,10 +61,7 @@ func RandInt(min int, max int, randz *rand.Rand) int {
  * @param n 要随机多n个数
  * @return
  */
-func GetRandomValues(numbers []int, n int, randz *rand.Rand) []int {
-	if randz == nil {
-		randz = rand.New(rand.NewSource(int64(rand.Int31())))
-	}
+func GetRandomValues(numbers []int, n int) []int {
 	size := len(numbers)
 	filter := make([]int, size)
 	copy(filter, numbers)
@@ -84,7 +70,7 @@ func GetRandomValues(numbers []int, n int, randz *rand.Rand) []int {
 	}
 	list := make([]int, 0, n)
 	for i := 0; i < n; i++ {
-		index := randz.Intn(len(filter))
+		index := Intn(len(filter))
 		list = append(list, filter[index])
 		filter = append(filter[:index], filter[index+1:]...)
 	}
@@ -98,10 +84,7 @@ func GetRandomValues(numbers []int, n int, randz *rand.Rand) []int {
  * @param n 要随机多n个数
  * @return
  */
-func GetRandomValuesInt64(numbers []int64, n int, randz *rand.Rand) []int64 {
-	if randz == nil {
-		randz = rand.New(rand.NewSource(int64(rand.Int31())))
-	}
+func GetRandomValuesInt64(numbers []int64, n int) []int64 {
 	size := len(numbers)
 	filter := make([]int64, size)
 	copy(filter, numbers)
@@ -110,7 +93,7 @@ func GetRandomValuesInt64(numbers []int64, n int, randz *rand.Rand) []int64 {
 	}
 	list := make([]int64, 0, n)
 	for i := 0; i < n; i++ {
-		index := randz.Intn(len(filter))
+		index := Intn(len(filter))
 		list = append(list, filter[index])
 		filter = append(filter[:index], filter[index+1:]...)
 	}
@@ -125,16 +108,13 @@ func GetRandomValuesInt64(numbers []int64, n int, randz *rand.Rand) []int64 {
  * @see #GetRandomNumber(String, Random)
  * @return
  */
-func GetRandomNumbers(args string, randz *rand.Rand) []int {
-	if randz == nil {
-		randz = rand.New(rand.NewSource(int64(rand.Int31())))
-	}
+func GetRandomNumbers(args string) []int {
 	strs := strings.Split(args, "#")
 	size := len(strs)
 	ints := make([]int, 0, size)
 	for i := 0; i < size; i++ {
 		if len(strs[i]) > 0 {
-			ints = append(ints, GetRandomNumber(strs[i], 1, randz)[0])
+			ints = append(ints, GetRandomNumber(strs[i], 1)[0])
 		}
 	}
 	return ints
@@ -153,10 +133,7 @@ func GetRandomNumbers(args string, randz *rand.Rand) []int {
  * @param radom
  * @return
  */
-func GetRandomNumber(args string, n int, randz *rand.Rand) []int {
-	if randz == nil {
-		randz = rand.New(rand.NewSource(int64(rand.Int31())))
-	}
+func GetRandomNumber(args string, n int) []int {
 	var err error
 	//	if strings.Index(args, ",") > 0 {
 	values := strings.Split(args, ",")
@@ -183,14 +160,14 @@ func GetRandomNumber(args string, n int, randz *rand.Rand) []int {
 				weights[i] = value
 				weightSum += value
 			}
-			if numbers[i], err = average(valuesStr, randz); err != nil {
+			if numbers[i], err = average(valuesStr); err != nil {
 				panic(fmt.Errorf("invalid args:%v,err:%v", args, err))
 			}
 		}
 		// 随机多个
 		rd := make([]int, 0, n)
 		for j := 0; j < n; j++ {
-			ranNum := randz.Intn(weightSum)
+			ranNum := Intn(weightSum)
 			for i := 0; i < size; i++ {
 				ranNum -= weights[i]
 				if ranNum < 0 {
@@ -206,19 +183,19 @@ func GetRandomNumber(args string, n int, randz *rand.Rand) []int {
 		return rd
 	} else { // 1~10,44~89,2~5
 		for i := 0; i < size; i++ {
-			if numbers[i], err = average(values[i], randz); err != nil {
+			if numbers[i], err = average(values[i]); err != nil {
 				panic(fmt.Errorf("invalid args:%v,err:%v", args, err))
 			}
 		}
 		if n == 1 {
-			return []int{numbers[randz.Intn(size)]}
+			return []int{numbers[Intn(size)]}
 		} else {
-			return GetRandomValues(numbers, n, randz)
+			return GetRandomValues(numbers, n)
 		}
 	}
 }
 
-func average(args string, radom *rand.Rand) (int, error) { // 1~10
+func average(args string) (int, error) { // 1~10
 	if strings.Index(args, "~") > 0 {
 		tmp := strings.Split(args, "~")
 		if v1, err1 := strconv.Atoi(tmp[0]); err1 != nil {
@@ -226,7 +203,7 @@ func average(args string, radom *rand.Rand) (int, error) { // 1~10
 		} else if v2, err2 := strconv.Atoi(tmp[1]); err2 != nil {
 			return 0, err2
 		} else {
-			return v1 + radom.Intn(v2+1-v1), nil
+			return v1 + Intn(v2+1-v1), nil
 		}
 	} else {
 		return strconv.Atoi(args)
@@ -240,10 +217,7 @@ type RandItem struct {
 	Weight  int32 `json:"weight"`  //权重
 }
 
-func GetRandomItems(items []RandItem, n int, randz *rand.Rand) []RandItem {
-	if randz == nil {
-		randz = rand.New(rand.NewSource(int64(rand.Int31())))
-	}
+func GetRandomItems(items []RandItem, n int) []RandItem {
 	size := len(items)
 	if n > size {
 		n = size
@@ -254,7 +228,7 @@ func GetRandomItems(items []RandItem, n int, randz *rand.Rand) []RandItem {
 	}
 	rd := make([]RandItem, 0, n)
 	for j := 0; j < n; j++ {
-		ranNum := randz.Intn(weightSum)
+		ranNum := Intn(weightSum)
 		for i := 0; i < size; i++ {
 			ranNum -= int(items[i].Weight)
 			if ranNum < 0 {
@@ -278,10 +252,7 @@ type RandInterface interface {
 }
 
 //GetRandomWeight 随机数选取
-func GetRandomWeight(data RandInterface, n int, randz *rand.Rand) interface{} {
-	if randz == nil {
-		randz = rand.New(rand.NewSource(int64(rand.Int31())))
-	}
+func GetRandomWeight(data RandInterface, n int) interface{} {
 	size := data.Len()
 	if n > size {
 		n = size
@@ -294,7 +265,7 @@ func GetRandomWeight(data RandInterface, n int, randz *rand.Rand) interface{} {
 	var indexs []int
 
 	for j := 0; j < n; j++ {
-		ranNum := randz.Intn(weightSum)
+		ranNum := Intn(weightSum)
 		for i := 0; i < size; i++ {
 			find := false
 			for _, index := range indexs {

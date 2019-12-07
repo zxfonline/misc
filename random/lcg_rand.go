@@ -1,5 +1,7 @@
 package random
 
+import "sync"
+
 const (
 	LCG_A uint32 = 1664525
 	LCG_C uint32 = 1013904223
@@ -9,6 +11,7 @@ type LCGRand struct {
 	seed uint32
 	skip uint32
 	x    uint32
+	lock sync.Mutex
 }
 
 // 范围[0,n)
@@ -26,11 +29,13 @@ func (lcg *LCGRand) RandFloat64() float64 {
 }
 
 func (lcg *LCGRand) NextRand() uint32 {
+	lcg.lock.Lock()
+	defer lcg.lock.Unlock()
 	lcg.x = LCG_A*lcg.x + LCG_C
 	lcg.skip++
 	return lcg.x
 }
 
 func NewLCGRand(seed uint32) *LCGRand {
-	return &LCGRand{seed, 0, seed}
+	return &LCGRand{seed: seed, skip: 0, x: seed}
 }
