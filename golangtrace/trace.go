@@ -391,11 +391,16 @@ func (l *lazySprintf) String() string {
 
 // New returns a new Trace with the specified family and title.
 func New(family, title string, expvar bool) Trace {
+	return NewWithStart(family, title, expvar, time.Now())
+}
+
+// New returns a new Trace with the specified family and title.
+func NewWithStart(family, title string, expvar bool, start time.Time) Trace {
 	tr := newTrace()
 	tr.ref()
 	tr.ID = atomic.AddInt64(&traceID, 1)
 	tr.Family, tr.Title, tr.expvar = family, title, expvar
-	tr.Start = time.Now()
+	tr.Start = start
 	tr.maxEvents = maxEventsPerTrace
 	tr.events = tr.eventsBuf[:0]
 

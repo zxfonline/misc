@@ -46,7 +46,7 @@ type NetPacket struct {
 	Data    []byte
 	Session *TCPSession
 	//收到该消息包的时间戳 毫秒
-	ReceiveTime int64
+	ReceiveTime time.Time
 }
 
 type NetConnIF interface {
@@ -86,7 +86,7 @@ type TCPSession struct {
 	// 包频率包数
 	rpmLimit uint32
 	// 包频率检测间隔
-	rpmInterval int64
+	rpmInterval time.Duration
 	// 超过频率控制离线通知包
 	offLineMsg *NetPacket
 
@@ -179,7 +179,7 @@ func (s *TCPSession) ReadLoop(filter func(*NetPacket) bool) {
 		delayTimer = time.NewTimer(s.readDelay)
 	}
 
-	rpmStart := time.Now().Unix()
+	rpmStart := time.Now()
 	rpmCount := uint32(0)
 
 	//rpmMsgCount := 0
@@ -220,15 +220,15 @@ func (s *TCPSession) ReadLoop(filter func(*NetPacket) bool) {
 
 			// 达到限制包数
 			if rpmCount > s.rpmLimit {
-				now := time.Now().Unix()
+				now := time.Now()
 				// 检测时间间隔
-				if now-rpmStart < s.rpmInterval {
+				if now.Sub(rpmStart) < s.rpmInterval {
 					// 提示操作太频繁三次后踢下线
 					//rpmMsgCount++
 					//if rpmMsgCount > 3 {
 					// 发送频率过高的消息包
 					s.DirectSendAndClose(s.offLineMsg)
-					log.Errorf("session rpm too high,%d/%d qps,session:%d,remote:%s", rpmCount, s.rpmInterval, s.SessionId, s.RemoteAddr())
+					log.Errorf("session rpm too high,%d/%s qps,session:%d,remote:%s", rpmCount, s.rpmInterval, s.SessionId, s.RemoteAddr())
 					return
 					//}
 					//// 发送频率过高的消息包
@@ -249,7 +249,7 @@ func (s *TCPSession) ReadLoop(filter func(*NetPacket) bool) {
 
 		msgId := ServerEndian.Uint16(data[:MSG_ID_SIZE])
 
-		pack := &NetPacket{MsgId: msgId, Data: data[MSG_ID_SIZE:], Session: s, ReceiveTime: timefix.CurrentMS()}
+		pack := &NetPacket{MsgId: msgId, Data: data[MSG_ID_SIZE:], Session: s, ReceiveTime: time.Now()}
 
 		if s.readDelay > 0 {
 			delayTimer.Reset(s.readDelay)
@@ -413,7 +413,7 @@ func (s *TCPSession) SetParameter(readDelay, sendDelay time.Duration, maxRecvSiz
 }
 
 // 包频率控制参数
-func (s *TCPSession) SetRpmParameter(rpmLimit uint32, rpmInterval int64, msg *NetPacket) {
+func (s *TCPSession) SetRpmParameter(rpmLimit uint32, rpmInterval time.Duration, msg *NetPacket) {
 	s.rpmLimit = rpmLimit
 	s.rpmInterval = rpmInterval
 	s.offLineMsg = msg
@@ -459,13 +459,19 @@ func (s *TCPSession) ParsePacket(pkt []byte) *NetPacket {
 		decoder.XORKeyStream(data, data)
 	}
 	msgId := ServerEndian.Uint16(data[:MSG_ID_SIZE])
-	return &NetPacket{MsgId: msgId, Data: data[MSG_ID_SIZE:], Session: s, ReceiveTime: timefix.CurrentMS()}
+	return &NetPacket{MsgId: msgId, Data: data[MSG_ID_SIZE:], Session: s, ReceiveTime: time.Now()}
 }
 
 func (s *TCPSession) TraceStart(family, title string, expvar bool) {
 	if trace.EnableTracing {
 		s.TraceFinish(nil)
 		s.tr = golangtrace.New(family, title, expvar)
+	}
+}
+func (s *TCPSession) TraceStartWithStart(family, title string, expvar bool, startTime time.Time) {
+	if trace.EnableTracing {
+		s.TraceFinish(nil)
+		s.tr = golangtrace.NewWithStart(family, title, expvar, startTime)
 	}
 }
 
