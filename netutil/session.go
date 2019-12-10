@@ -45,6 +45,8 @@ type NetPacket struct {
 	MsgId   uint16
 	Data    []byte
 	Session *TCPSession
+	//收到该消息包的时间戳 毫秒
+	ReceiveTime int64
 }
 
 type NetConnIF interface {
@@ -247,7 +249,7 @@ func (s *TCPSession) ReadLoop(filter func(*NetPacket) bool) {
 
 		msgId := ServerEndian.Uint16(data[:MSG_ID_SIZE])
 
-		pack := &NetPacket{msgId, data[MSG_ID_SIZE:], s}
+		pack := &NetPacket{MsgId: msgId, Data: data[MSG_ID_SIZE:], Session: s, ReceiveTime: timefix.CurrentMS()}
 
 		if s.readDelay > 0 {
 			delayTimer.Reset(s.readDelay)
@@ -457,7 +459,7 @@ func (s *TCPSession) ParsePacket(pkt []byte) *NetPacket {
 		decoder.XORKeyStream(data, data)
 	}
 	msgId := ServerEndian.Uint16(data[:MSG_ID_SIZE])
-	return &NetPacket{msgId, data[MSG_ID_SIZE:], s}
+	return &NetPacket{MsgId: msgId, Data: data[MSG_ID_SIZE:], Session: s, ReceiveTime: timefix.CurrentMS()}
 }
 
 func (s *TCPSession) TraceStart(family, title string, expvar bool) {
