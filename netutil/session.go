@@ -361,7 +361,7 @@ func (s *TCPSession) DirectSend(packet *NetPacket) bool {
 
 	err := s.performSend(s.sendCache[:HEAD_SIZE+packLen], 0)
 	if err != nil {
-		log.Warnf("error writing msg,session:%d,remote:%s,err:%v", s.SessionId, s.RemoteAddr(), err)
+		log.Debugf("error writing msg,session:%d,remote:%s,err:%v", s.SessionId, s.RemoteAddr(), err)
 		s.Close()
 		return false
 	}

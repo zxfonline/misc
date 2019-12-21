@@ -2,6 +2,7 @@ package trace
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/zxfonline/misc/expvar"
 
@@ -33,6 +34,15 @@ type ProxyTrace struct {
 func TraceStart(family, title string, expvar bool) *ProxyTrace {
 	if EnableTracing {
 		pt := &ProxyTrace{tr: golangtrace.New(family, title, expvar)}
+		return pt
+	}
+	return nil
+}
+
+//TraceStartWithTime 开始跟踪
+func TraceStartWithTime(family, title string, expvar bool, start time.Time) *ProxyTrace {
+	if EnableTracing {
+		pt := &ProxyTrace{tr: golangtrace.NewWithStart(family, title, expvar, start)}
 		return pt
 	}
 	return nil
