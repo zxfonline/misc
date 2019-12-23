@@ -292,14 +292,18 @@ func (s *TCPSession) IsClosed() bool {
 
 func (s *TCPSession) closeTask() {
 	s.OffLineTime = timefix.SecondTime()
-	// 告诉服务器该玩家掉线,或者下线
-	t := time.NewTimer(15 * time.Second)
-	select {
-	case s.OffChan <- s.SessionId:
-		t.Stop()
-	case <-t.C:
-		log.Warnf("off chan time out,session:%d,remote:%s", s.SessionId, s.RemoteAddr())
+	if s.OffChan != nil {
+		s.OffChan <- s.SessionId
+		//// 告诉服务器该玩家掉线,或者下线
+		//t := time.NewTimer(15 * time.Second)
+		//select {
+		//case s.OffChan <- s.SessionId:
+		//	t.Stop()
+		//case <-t.C:
+		//	log.Warnf("off chan time out,session:%d,remote:%s", s.SessionId, s.RemoteAddr())
+		//}
 	}
+
 	// close connection
 	s.Conn.Close()
 }
