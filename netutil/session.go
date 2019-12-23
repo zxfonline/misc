@@ -322,9 +322,8 @@ func (s *TCPSession) SendLoop() {
 }
 
 func (s *TCPSession) DirectSendAndClose(packet *NetPacket) {
-	if s.DirectSend(packet) {
-		s.Close()
-	}
+	defer s.Close()
+	s.DirectSend(packet)
 }
 func (s *TCPSession) DirectSend(packet *NetPacket) bool {
 	if packet == nil {
