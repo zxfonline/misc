@@ -3,7 +3,6 @@ package strutil
 import (
 	"fmt"
 	"math"
-	"math/rand"
 	"reflect"
 	"strconv"
 	"strings"
@@ -11,6 +10,8 @@ import (
 	"unicode"
 	"unicode/utf8"
 	"unsafe"
+
+	"github.com/zxfonline/misc/random"
 )
 
 var (
@@ -719,8 +720,6 @@ func CheckStrLen(str string, minLen, maxLen int) bool {
 	return length >= minLen && length <= maxLen
 }
 
-var rd = rand.NewSource(time.Now().UnixNano())
-
 const (
 	letterBytes   = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	letterIdxBits = 6                    // 6 bits to represent a letter index
@@ -731,9 +730,9 @@ const (
 func RandStr(n int) string {
 	b := make([]byte, n)
 	// A rd.Int63() generates 63 random bits, enough for letterIdxMax letters!
-	for i, cache, remain := n-1, rd.Int63(), letterIdxMax; i >= 0; {
+	for i, cache, remain := n-1, random.Int63(), letterIdxMax; i >= 0; {
 		if remain == 0 {
-			cache, remain = rd.Int63(), letterIdxMax
+			cache, remain = random.Int63(), letterIdxMax
 		}
 		if idx := int(cache & letterIdxMask); idx < len(letterBytes) {
 			b[i] = letterBytes[idx]

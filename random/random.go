@@ -5,39 +5,16 @@ import (
 	"math/rand"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 )
 
 var (
-	//randPool    = make(chan func() (n int, input chan<- int))
-	_globalRand *rand.Rand
-	_randLock   sync.Mutex
+	globalRand *rand.Rand
 )
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
-	_globalRand = rand.New(rand.NewSource(rand.Int63()))
-	//go func() {
-	//	for {
-	//		randFunc := <-randPool
-	//		n, output := randFunc()
-	//		output <- _globalRand.Intn(n)
-	//	}
-	//}()
-}
-
-// Intn returns, as an int, a non-negative pseudo-random number in [0,n).
-// It panics if n <= 0.
-func Intn(n int) int {
-	//output := make(chan int, 1)
-	//randPool <- func() (int, chan<- int) {
-	//	return n, output
-	//}
-	//return <-output
-	_randLock.Lock()
-	defer _randLock.Unlock()
-	return _globalRand.Intn(n)
+	globalRand = rand.New(&lockedSource{src: rand.NewSource(rand.Int63()).(rand.Source64)})
 }
 
 //------------------------
