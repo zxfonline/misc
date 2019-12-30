@@ -12,7 +12,6 @@ import (
 	"html/template"
 	"math"
 	"sync"
-	"time"
 
 	"github.com/zxfonline/misc/json"
 
@@ -255,7 +254,6 @@ func bucketBoundary(bucket uint8) int64 {
 
 // bucketData holds data about a specific bucket for use in distTmpl.
 type bucketData struct {
-	Level              int
 	Lower, Upper       int64
 	N                  int64
 	Pct, CumulativePct float64
@@ -267,7 +265,6 @@ type data struct {
 	Buckets                 []*bucketData
 	Count, Median           int64
 	Mean, StandardDeviation float64
-	Time                    time.Time
 }
 
 // maxHTMLBarWidth is the maximum width of the HTML bar for visualizing buckets.
@@ -308,7 +305,6 @@ func (h *histogram) newData() *data {
 			upperBound = math.MaxInt64
 		}
 		buckets[i] = &bucketData{
-			Level:         i,
 			Lower:         bucketBoundary(uint8(i)),
 			Upper:         upperBound,
 			N:             n,
@@ -323,7 +319,6 @@ func (h *histogram) newData() *data {
 		Median:            h.median(),
 		Mean:              h.average(),
 		StandardDeviation: h.standardDeviation(),
-		Time:              time.Now(),
 	}
 }
 

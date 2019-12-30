@@ -19,13 +19,9 @@
 // this way, link this package into your program:
 //	import _ "expvar"
 //
-
-// +build !go1.8
-
 package expvar
 
 import (
-	"bytes"
 	"fmt"
 	"math"
 	"net/http"
@@ -33,14 +29,14 @@ import (
 	"runtime"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 
-	"github.com/zxfonline/misc/json"
-
-	"github.com/zxfonline/misc/log"
-
 	"github.com/zxfonline/misc/iptable"
+
+	"github.com/zxfonline/misc/json"
+	"github.com/zxfonline/misc/log"
 )
 
 // Var is an abstract type for all exported variables.
@@ -118,7 +114,7 @@ type KeyValue struct {
 }
 
 func (v *Map) String() string {
-	var b bytes.Buffer
+	var b strings.Builder
 	fmt.Fprintf(&b, "{")
 	first := true
 	v.Do(func(kv KeyValue) {
@@ -144,12 +140,18 @@ func (v *Map) Init() *Map {
 	return v
 }
 
-// updateKeys updates the sorted list of keys in v.keys.
+// addKey updates the sorted list of keys in v.keys.
 func (v *Map) addKey(key string) {
 	v.keysMu.Lock()
 	defer v.keysMu.Unlock()
-	v.keys = append(v.keys, key)
-	sort.Strings(v.keys)
+	// Using insertion sort to place key into the already-sorted v.keys.
+	if i := sort.SearchStrings(v.keys, key); i >= len(v.keys) {
+		v.keys = append(v.keys, key)
+	} else if v.keys[i] != key {
+		v.keys = append(v.keys, "")
+		copy(v.keys[i+1:], v.keys[i:])
+		v.keys[i] = key
+	}
 }
 
 func (v *Map) Get(key string) Var {
@@ -206,6 +208,17 @@ func (v *Map) AddFloat(key string, delta float64) {
 	}
 }
 
+// Delete deletes the given key from the map.
+func (v *Map) Delete(key string) {
+	v.keysMu.Lock()
+	defer v.keysMu.Unlock()
+	i := sort.SearchStrings(v.keys, key)
+	if i < len(v.keys) && key == v.keys[i] {
+		v.keys = append(v.keys[:i], v.keys[i+1:]...)
+		v.m.Delete(key)
+	}
+}
+
 // Do calls f for each entry in the map.
 // The map is locked during the iteration,
 // but existing entries may be concurrently updated.
@@ -228,7 +241,7 @@ func (v *String) Value() string {
 	return p
 }
 
-// String implements the Val interface. To get the unquoted string
+// String implements the Var interface. To get the unquoted string
 // use Value.
 func (v *String) String() string {
 	s := v.Value()
@@ -265,7 +278,7 @@ var (
 // registered then this will log.Panic.
 func Publish(name string, v Var) {
 	if _, dup := vars.LoadOrStore(name, v); dup {
-		log.Panic("Reuse of exported var name:", name)
+		log.Panicln("Reuse of exported var name:", name)
 	}
 	varKeysMu.Lock()
 	defer varKeysMu.Unlock()
@@ -325,7 +338,6 @@ func expvarHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	//w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	fmt.Fprintf(w, "{\n")
 	first := true
 	Do(func(kv KeyValue) {

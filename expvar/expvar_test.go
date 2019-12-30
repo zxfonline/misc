@@ -2,14 +2,13 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// +build !go1.8
-
 package expvar
 
 import (
 	"bytes"
-
+	"crypto/sha1"
 	"fmt"
+	"github.com/zxfonline/misc/json"
 	"net"
 	"net/http/httptest"
 	"reflect"
@@ -18,8 +17,6 @@ import (
 	"sync"
 	"sync/atomic"
 	"testing"
-
-	"github.com/zxfonline/misc/json"
 )
 
 // RemoveAll removes all exported variables.
@@ -187,6 +184,43 @@ func TestMapInit(t *testing.T) {
 	}
 }
 
+func TestMapDelete(t *testing.T) {
+	RemoveAll()
+	colors := NewMap("bike-shed-colors")
+
+	colors.Add("red", 1)
+	colors.Add("red", 2)
+	colors.Add("blue", 4)
+
+	n := 0
+	colors.Do(func(KeyValue) { n++ })
+	if n != 2 {
+		t.Errorf("after two Add calls with distinct keys, Do should invoke f 2 times; got %v", n)
+	}
+
+	colors.Delete("red")
+	n = 0
+	colors.Do(func(KeyValue) { n++ })
+	if n != 1 {
+		t.Errorf("removed red, Do should invoke f 1 times; got %v", n)
+	}
+
+	colors.Delete("notfound")
+	n = 0
+	colors.Do(func(KeyValue) { n++ })
+	if n != 1 {
+		t.Errorf("attempted to remove notfound, Do should invoke f 1 times; got %v", n)
+	}
+
+	colors.Delete("blue")
+	colors.Delete("blue")
+	n = 0
+	colors.Do(func(KeyValue) { n++ })
+	if n != 0 {
+		t.Errorf("all keys removed, Do should invoke f 0 times; got %v", n)
+	}
+}
+
 func TestMapCounter(t *testing.T) {
 	RemoveAll()
 	colors := NewMap("bike-shed-colors")
@@ -266,6 +300,26 @@ func BenchmarkMapSetDifferent(b *testing.B) {
 	})
 }
 
+// BenchmarkMapSetDifferentRandom simulates such a case where the concerned
+// keys of Map.Set are generated dynamically and as a result insertion is
+// out of order and the number of the keys may be large.
+func BenchmarkMapSetDifferentRandom(b *testing.B) {
+	keys := make([]string, 100)
+	for i := range keys {
+		keys[i] = fmt.Sprintf("%x", sha1.Sum([]byte(fmt.Sprint(i))))
+	}
+
+	v := new(Int)
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		m := new(Map).Init()
+		for _, k := range keys {
+			m.Set(k, v)
+		}
+	}
+}
+
 func BenchmarkMapSetString(b *testing.B) {
 	m := new(Map).Init()
 
@@ -315,6 +369,25 @@ func BenchmarkMapAddDifferent(b *testing.B) {
 			}
 		}
 	})
+}
+
+// BenchmarkMapAddDifferentRandom simulates such a case where that the concerned
+// keys of Map.Add are generated dynamically and as a result insertion is out of
+// order and the number of the keys may be large.
+func BenchmarkMapAddDifferentRandom(b *testing.B) {
+	keys := make([]string, 100)
+	for i := range keys {
+		keys[i] = fmt.Sprintf("%x", sha1.Sum([]byte(fmt.Sprint(i))))
+	}
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		m := new(Map).Init()
+		for _, k := range keys {
+			m.Add(k, 1)
+		}
+	}
 }
 
 func BenchmarkMapAddSameSteadyState(b *testing.B) {

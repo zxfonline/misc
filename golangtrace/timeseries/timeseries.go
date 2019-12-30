@@ -404,9 +404,9 @@ func (ts *timeSeries) extract(l *tsLevel, start, finish time.Time, num int, resu
 
 	// Where should scanning start?
 	if dstStart.After(srcStart) {
-		advance := dstStart.Sub(srcStart) / srcInterval
-		srcIndex += int(advance)
-		srcStart = srcStart.Add(advance * srcInterval)
+		advance := int(dstStart.Sub(srcStart) / srcInterval)
+		srcIndex += advance
+		srcStart = srcStart.Add(time.Duration(advance) * srcInterval)
 	}
 
 	// The i'th value is computed as show below.
@@ -434,8 +434,8 @@ func (ts *timeSeries) extract(l *tsLevel, start, finish time.Time, num int, resu
 					// dst partially overlaps src.
 					overlapStart := maxTime(srcStart, dstStart)
 					overlapEnd := minTime(srcEnd, dstEnd)
-					baset := srcEnd.Sub(srcStart)
-					fraction := overlapEnd.Sub(overlapStart).Seconds() / baset.Seconds()
+					base := srcEnd.Sub(srcStart)
+					fraction := overlapEnd.Sub(overlapStart).Seconds() / base.Seconds()
 
 					used := ts.provider()
 					if srcValue != nil {

@@ -64,7 +64,14 @@ func TraceFinishWithExpvar(pt *ProxyTrace, traceDefer func(*expvar.Map, int64)) 
 				family := pt.tr.GetFamily()
 				req := expvar.Get(family)
 				if req == nil {
-					req = expvar.NewMap(family)
+					func() {
+						defer func() {
+							if v := recover(); v != nil {
+								req = expvar.Get(family)
+							}
+						}()
+						req = expvar.NewMap(family)
+					}()
 				}
 				traceDefer(req.(*expvar.Map), pt.tr.GetElapsedTime())
 			}
