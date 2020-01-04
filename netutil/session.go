@@ -22,12 +22,10 @@ import (
 var _sessionID int64
 
 const (
-	PACKET_LIMIT = 65536
-)
-
-const (
 	//消息报头字节数
 	HEAD_SIZE = 4
+	//消息包自增的序号
+	SEQ_ID_SIZE = 4
 	//消息号占用的字节数
 	MSG_ID_SIZE = 2
 )
@@ -51,16 +49,19 @@ type NetPacket struct {
 
 type NetConnIF interface {
 	SetReadDeadline(t time.Time) error
-	Close() error
 	SetWriteDeadline(t time.Time) error
+	Close() error
+	SetWriteBuffer(bytes int) error
+	SetReadBuffer(bytes int) error
 	Write(b []byte) (n int, err error)
 	RemoteAddr() net.Addr
 	Read(p []byte) (n int, err error)
 }
 
 type TCPSession struct {
-	//*net.TCPConn
+	//Conn *net.TCPConn
 	Conn     NetConnIF
+	IP       net.IP
 	SendChan chan *NetPacket
 	ReadChan chan *NetPacket
 	//离线消息管道,用于外部接收连接断开的消息并处理后续
@@ -87,16 +88,22 @@ type TCPSession struct {
 	rpmLimit uint32
 	// 包频率检测间隔
 	rpmInterval time.Duration
+	// 对收到的包进行计数，可避免重放攻击-REPLAY-ATTACK
+	PacketRcvSeq uint32
+	//数据包发送计数器
+	PacketSndSeq uint32
 	// 超过频率控制离线通知包
 	offLineMsg *NetPacket
 
 	OnLineTime  int64
 	OffLineTime int64
 
-	EncodeKey []byte
-	DecodeKey []byte
-	tr        golangtrace.Trace
-	sendLock  sync.Mutex
+	// 加密器
+	Encoder *rc4.Cipher
+	// 解密器
+	Decoder  *rc4.Cipher
+	tr       golangtrace.Trace
+	sendLock sync.Mutex
 }
 
 //filter:true 过滤成功，抛弃该报文；false:过滤失败，继续执行该报文消息
@@ -111,13 +118,14 @@ func (s *TCPSession) RemoteAddr() net.Addr {
 }
 
 //网络连接远程ip
-func (s *TCPSession) RemoteIp() string {
-	addr := s.Conn.RemoteAddr().String()
-	host, _, err := net.SplitHostPort(addr)
-	if err != nil {
-		host = addr
-	}
-	return net.ParseIP(host).String()
+func (s *TCPSession) RemoteIp() net.IP {
+	//addr := s.Conn.RemoteAddr().String()
+	//host, _, err := net.SplitHostPort(addr)
+	//if err != nil {
+	//	host = addr
+	//}
+	//return net.ParseIP(host).String()
+	return s.IP
 }
 
 func (s *TCPSession) Send(packet *NetPacket) bool {
@@ -152,19 +160,10 @@ func (s *TCPSession) Send(packet *NetPacket) bool {
 }
 
 // RC4加密解密
-func (s *TCPSession) SetCipher(encodeKey, decodeKey []byte) error {
-	if len(encodeKey) < 1 || len(encodeKey) > 256 {
-		return rc4.KeySizeError(len(encodeKey))
-	}
-
-	if len(decodeKey) < 1 || len(decodeKey) > 256 {
-		return rc4.KeySizeError(len(decodeKey))
-	}
-
-	s.EncodeKey = encodeKey
-	s.DecodeKey = decodeKey
+func (s *TCPSession) SetCipher(encoder, decoder *rc4.Cipher) {
+	s.Encoder = encoder
+	s.Decoder = decoder
 	s.Flag |= SESS_KEYEXCG
-	return nil
 }
 
 func (s *TCPSession) ReadLoop(filter func(*NetPacket) bool) {
@@ -201,16 +200,15 @@ func (s *TCPSession) ReadLoop(filter func(*NetPacket) bool) {
 			return
 		}
 
-		// packet data
+		// packet payload
 		size := ServerEndian.Uint32(header)
-		if s.maxRecvSize != 0 && size > s.maxRecvSize {
+		if size < SEQ_ID_SIZE+MSG_ID_SIZE || (s.maxRecvSize != 0 && size > s.maxRecvSize) {
 			log.Warnf("error receiving,size:%d,head:%+v,session:%d,remote:%s", size, header, s.SessionId, s.RemoteAddr())
 			return
 		}
-
-		data := make([]byte, size)
-		n, err = io.ReadFull(s.Conn, data)
-		if err != nil || size < MSG_ID_SIZE {
+		payload := make([]byte, size)
+		n, err = io.ReadFull(s.Conn, payload)
+		if err != nil {
 			log.Warnf("error receiving body,bytes:%d,size:%d,session:%d,remote:%s,err:%v", n, size, s.SessionId, s.RemoteAddr(), err)
 			return
 		}
@@ -240,16 +238,23 @@ func (s *TCPSession) ReadLoop(filter func(*NetPacket) bool) {
 				rpmStart = now
 			}
 		}
+		s.PacketRcvSeq++
 
 		// 解密
 		if s.Flag&SESS_ENCRYPT != 0 {
-			decoder, _ := rc4.NewCipher(s.DecodeKey)
-			decoder.XORKeyStream(data, data)
+			s.Decoder.XORKeyStream(payload, payload)
 		}
+		// 读客户端数据包序列号(1,2,3...)
+		// 客户端发送的数据包必须包含一个自增的序号，必须严格递增
+		// 加密后，可避免重放攻击-REPLAY-ATTACK
+		seqId := ServerEndian.Uint32(payload[:SEQ_ID_SIZE])
+		if seqId != s.PacketRcvSeq {
+			log.Errorf("session illegal packet sequence id:%v should be:%v size:%v", seqId, s.PacketRcvSeq, len(payload))
+			return
+		}
+		msgId := ServerEndian.Uint16(payload[SEQ_ID_SIZE : SEQ_ID_SIZE+MSG_ID_SIZE])
 
-		msgId := ServerEndian.Uint16(data[:MSG_ID_SIZE])
-
-		pack := &NetPacket{MsgId: msgId, Data: data[MSG_ID_SIZE:], Session: s, ReceiveTime: time.Now()}
+		pack := &NetPacket{MsgId: msgId, Data: payload[SEQ_ID_SIZE+MSG_ID_SIZE:], Session: s, ReceiveTime: time.Now()}
 
 		if s.readDelay > 0 {
 			if !delayTimer.Stop() {
@@ -337,29 +342,28 @@ func (s *TCPSession) DirectSend(packet *NetPacket) bool {
 	}
 	s.sendLock.Lock()
 	defer s.sendLock.Unlock()
-
-	packLen := uint32(len(packet.Data) + MSG_ID_SIZE)
+	s.PacketSndSeq++
+	packLen := uint32(len(packet.Data) + SEQ_ID_SIZE + MSG_ID_SIZE)
 
 	if packLen > s.sendCacheSize {
-		s.sendCacheSize = packLen + (packLen >> 2) //1.25倍率
+		s.sendCacheSize = HEAD_SIZE + packLen + (packLen >> 2) //1.25倍率
 		s.sendCache = make([]byte, s.sendCacheSize)
 	}
 
 	// 4字节包长度
 	ServerEndian.PutUint32(s.sendCache, packLen)
-
+	//4字节消息序列号
+	ServerEndian.PutUint32(s.sendCache[HEAD_SIZE:], s.PacketSndSeq)
 	// 2字节消息id
-	ServerEndian.PutUint16(s.sendCache[HEAD_SIZE:], packet.MsgId)
+	ServerEndian.PutUint16(s.sendCache[HEAD_SIZE+SEQ_ID_SIZE:], packet.MsgId)
 
-	copy(s.sendCache[HEAD_SIZE+MSG_ID_SIZE:], packet.Data)
+	copy(s.sendCache[HEAD_SIZE+SEQ_ID_SIZE+MSG_ID_SIZE:], packet.Data)
 
 	// encryption
 	// (NOT_ENCRYPTED) -> KEYEXCG -> ENCRYPT
 	if s.Flag&SESS_ENCRYPT != 0 { // encryption is enabled
-		encoder, _ := rc4.NewCipher(s.EncodeKey)
 		data := s.sendCache[HEAD_SIZE : HEAD_SIZE+packLen]
-
-		encoder.XORKeyStream(data, data)
+		s.Encoder.XORKeyStream(data, data)
 	} else if s.Flag&SESS_KEYEXCG != 0 { // key is exchanged, encryption is not yet enabled
 		//s.Flag &^= SESS_KEYEXCG
 		s.Flag |= SESS_ENCRYPT
@@ -425,15 +429,15 @@ func (s *TCPSession) SetRpmParameter(rpmLimit uint32, rpmInterval time.Duration,
 	s.offLineMsg = msg
 }
 
-func NewSession(conn NetConnIF, readChan, sendChan chan *NetPacket, offChan chan int64) *TCPSession {
+func NewSession(conn NetConnIF, readChan, sendChan chan *NetPacket, offChan chan int64) (*TCPSession, error) {
 	s := &TCPSession{
 		Conn:          conn,
 		SendChan:      sendChan,
 		ReadChan:      readChan,
 		OffChan:       offChan,
 		SessionId:     atomic.AddInt64(&_sessionID, 1),
-		sendCache:     make([]byte, PACKET_LIMIT),
-		sendCacheSize: PACKET_LIMIT,
+		sendCache:     make([]byte, 256),
+		sendCacheSize: 256,
 		readDelay:     30 * time.Second,
 		sendDelay:     10 * time.Second,
 		sendFullClose: true,
@@ -441,7 +445,14 @@ func NewSession(conn NetConnIF, readChan, sendChan chan *NetPacket, offChan chan
 		OnLineTime:    timefix.SecondTime(),
 		CloseState:    chanutil.NewDoneChan(),
 	}
-	return s
+	host, _, err := net.SplitHostPort(conn.RemoteAddr().String())
+	if err != nil {
+		log.Error("cannot get remote address:", err)
+		return nil, err
+	}
+	s.IP = net.ParseIP(host)
+	//log.Debugf("new connection from:%v port:%v", host, port)
+	return s, nil
 }
 
 func (s *TCPSession) ParsePacket(pkt []byte) *NetPacket {
@@ -461,8 +472,8 @@ func (s *TCPSession) ParsePacket(pkt []byte) *NetPacket {
 	data := pkt[HEAD_SIZE:]
 	// 解密
 	if s.Flag&SESS_ENCRYPT != 0 {
-		decoder, _ := rc4.NewCipher(s.DecodeKey)
-		decoder.XORKeyStream(data, data)
+		//decoder, _ := rc4.NewCipher(s.DecodeKey)
+		s.Decoder.XORKeyStream(data, data)
 	}
 	msgId := ServerEndian.Uint16(data[:MSG_ID_SIZE])
 	return &NetPacket{MsgId: msgId, Data: data[MSG_ID_SIZE:], Session: s, ReceiveTime: time.Now()}
