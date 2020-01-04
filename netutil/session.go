@@ -252,6 +252,9 @@ func (s *TCPSession) ReadLoop(filter func(*NetPacket) bool) {
 		pack := &NetPacket{MsgId: msgId, Data: data[MSG_ID_SIZE:], Session: s, ReceiveTime: time.Now()}
 
 		if s.readDelay > 0 {
+			if !delayTimer.Stop() {
+				<-delayTimer.C
+			}
 			delayTimer.Reset(s.readDelay)
 			if filter == nil {
 				select {
