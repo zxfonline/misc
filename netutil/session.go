@@ -343,10 +343,10 @@ func (s *TCPSession) DirectSend(packet *NetPacket) bool {
 	s.sendLock.Lock()
 	defer s.sendLock.Unlock()
 	s.PacketSndSeq++
-	packLen := uint32(len(packet.Data) + SEQ_ID_SIZE + MSG_ID_SIZE)
-
-	if packLen > s.sendCacheSize {
-		s.sendCacheSize = HEAD_SIZE + packLen + (packLen >> 2) //1.25倍率
+	packLen := uint32(SEQ_ID_SIZE + MSG_ID_SIZE + len(packet.Data))
+	totalSize := packLen + HEAD_SIZE
+	if totalSize > s.sendCacheSize {
+		s.sendCacheSize = totalSize + (totalSize >> 2) //1.25倍率
 		s.sendCache = make([]byte, s.sendCacheSize)
 	}
 
@@ -362,14 +362,14 @@ func (s *TCPSession) DirectSend(packet *NetPacket) bool {
 	// encryption
 	// (NOT_ENCRYPTED) -> KEYEXCG -> ENCRYPT
 	if s.Flag&SESS_ENCRYPT != 0 { // encryption is enabled
-		data := s.sendCache[HEAD_SIZE : HEAD_SIZE+packLen]
+		data := s.sendCache[HEAD_SIZE:totalSize]
 		s.Encoder.XORKeyStream(data, data)
 	} else if s.Flag&SESS_KEYEXCG != 0 { // key is exchanged, encryption is not yet enabled
 		//s.Flag &^= SESS_KEYEXCG
 		s.Flag |= SESS_ENCRYPT
 	}
 
-	err := s.performSend(s.sendCache[:HEAD_SIZE+packLen], 0)
+	err := s.performSend(s.sendCache[:totalSize], 0)
 	if err != nil {
 		log.Debugf("error writing msg,session:%d,remote:%s,err:%v", s.SessionId, s.RemoteAddr(), err)
 		s.Close()
