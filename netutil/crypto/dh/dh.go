@@ -31,12 +31,11 @@ package dh
 import (
 	"math"
 	"math/big"
-	"math/rand"
-	"time"
+
+	"github.com/zxfonline/misc/random"
 )
 
 var (
-	rng         = rand.New(rand.NewSource(time.Now().UnixNano()))
 	DH1BASE     = big.NewInt(3)
 	DH1PRIME, _ = big.NewInt(0).SetString("0x7FFFFFC3", 0)
 	MAXINT64    = big.NewInt(math.MaxInt64)
@@ -44,7 +43,7 @@ var (
 
 // Diffie-Hellman Key-exchange
 func DHExchange() (*big.Int, *big.Int) {
-	SECRET := big.NewInt(0).Rand(rng, MAXINT64)
+	SECRET := big.NewInt(0).Rand(random.GlobalRand(), MAXINT64)
 	MODPOWER := big.NewInt(0).Exp(DH1BASE, SECRET, DH1PRIME)
 	return SECRET, MODPOWER
 }

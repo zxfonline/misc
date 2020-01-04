@@ -17,6 +17,10 @@ func init() {
 	globalRand = rand.New(&lockedSource{src: rand.NewSource(rand.Int63()).(rand.Source64)})
 }
 
+func GlobalRand() *rand.Rand {
+	return globalRand
+}
+
 //------------------------
 
 //func main() {
