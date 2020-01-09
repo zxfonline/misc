@@ -40,7 +40,8 @@ type LineNode struct {
 	Id          int //外部控制的唯一id，主键
 	NeighborMax int // PLAYER=需要的最多邻居
 	NeighborMin int // PLAYER=需要的最小邻居
-	SubType     int //类型 0=匹配其他所有类型，!=0只能匹配相同类型
+	//多种类型|操作数值
+	SubType int
 }
 
 //根据传入的时间戳(秒),判断是否过期(主要用于房间锁定后或者人数满了)
@@ -237,7 +238,7 @@ func (nd *LineNodeList) SearchRange(secondOfNow int, cpoint *LineNode, needNum i
 			//			log.Println("skip match room", check.Id)
 			continue
 		}
-		if cpoint.SubType != 0 && check.SubType != 0 && check.SubType != cpoint.SubType {
+		if check.SubType&cpoint.SubType == 0 {
 			//			log.Println("skip match room", check.Id)
 			continue
 		}
@@ -268,7 +269,7 @@ func (nd *LineNodeList) SearchRange(secondOfNow int, cpoint *LineNode, needNum i
 			//			log.Println("skip match room", check.Id)
 			continue
 		}
-		if cpoint.SubType != 0 && check.SubType != 0 && check.SubType != cpoint.SubType {
+		if check.SubType&cpoint.SubType == 0 {
 			//			log.Println("skip match room", check.Id)
 			continue
 		}

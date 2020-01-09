@@ -172,11 +172,11 @@ func (s *TCPSession) ReadLoop(filter func(*NetPacket) bool) {
 	// 关闭发送
 	defer s.Close()
 
-	var delayTimer *time.Timer
+	//var delayTimer *time.Timer
 
-	if s.readDelay > 0 {
-		delayTimer = time.NewTimer(s.readDelay)
-	}
+	//if s.readDelay > 0 {
+	//	delayTimer = time.NewTimer(s.readDelay)
+	//}
 
 	rpmStart := time.Now()
 	rpmCount := uint32(0)
@@ -256,37 +256,40 @@ func (s *TCPSession) ReadLoop(filter func(*NetPacket) bool) {
 
 		pack := &NetPacket{MsgId: msgId, Data: payload[SEQ_ID_SIZE+MSG_ID_SIZE:], Session: s, ReceiveTime: time.Now()}
 
-		if s.readDelay > 0 {
-			if !delayTimer.Stop() {
-				<-delayTimer.C
-			}
-			delayTimer.Reset(s.readDelay)
-			if filter == nil {
-				select {
-				case s.ReadChan <- pack:
-				case <-delayTimer.C:
-					log.Warnf("session read busy or closed,waitChan:%d,session:%d,remote:%s", len(s.ReadChan), s.SessionId, s.RemoteAddr())
-					return
-				}
-			} else {
-				if ok := filter(pack); !ok {
-					select {
-					case s.ReadChan <- pack:
-					case <-delayTimer.C:
-						log.Warnf("session read busy or closed,waitChan:%d,session:%d,remote:%s", len(s.ReadChan), s.SessionId, s.RemoteAddr())
-						return
-					}
-				}
-			}
+		//if s.readDelay > 0 {
+		//	if !delayTimer.Stop() {
+		//		select {
+		//		case <-delayTimer.C:
+		//		default:
+		//		}
+		//	}
+		//	delayTimer.Reset(s.readDelay)
+		//	if filter == nil {
+		//		select {
+		//		case s.ReadChan <- pack:
+		//		case <-delayTimer.C:
+		//			log.Warnf("session read busy or closed,waitChan:%d,session:%d,remote:%s", len(s.ReadChan), s.SessionId, s.RemoteAddr())
+		//			return
+		//		}
+		//	} else {
+		//		if ok := filter(pack); !ok {
+		//			select {
+		//			case s.ReadChan <- pack:
+		//			case <-delayTimer.C:
+		//				log.Warnf("session read busy or closed,waitChan:%d,session:%d,remote:%s", len(s.ReadChan), s.SessionId, s.RemoteAddr())
+		//				return
+		//			}
+		//		}
+		//	}
+		//} else {
+		if filter == nil {
+			s.ReadChan <- pack
 		} else {
-			if filter == nil {
+			if ok := filter(pack); !ok {
 				s.ReadChan <- pack
-			} else {
-				if ok := filter(pack); !ok {
-					s.ReadChan <- pack
-				}
 			}
 		}
+		//}
 	}
 }
 
