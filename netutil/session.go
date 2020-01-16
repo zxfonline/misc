@@ -97,11 +97,9 @@ type TCPSession struct {
 
 	OnLineTime  int64
 	OffLineTime int64
+	EncodeKey   []byte
+	DecodeKey   []byte
 
-	// 加密器
-	Encoder *rc4.Cipher
-	// 解密器
-	Decoder  *rc4.Cipher
 	tr       golangtrace.Trace
 	sendLock sync.Mutex
 }
@@ -160,10 +158,19 @@ func (s *TCPSession) Send(packet *NetPacket) bool {
 }
 
 // RC4加密解密
-func (s *TCPSession) SetCipher(encoder, decoder *rc4.Cipher) {
-	s.Encoder = encoder
-	s.Decoder = decoder
+func (s *TCPSession) SetCipher(encodeKey, decodeKey []byte) error {
+	if len(encodeKey) < 1 || len(encodeKey) > 256 {
+		return rc4.KeySizeError(len(encodeKey))
+	}
+
+	if len(decodeKey) < 1 || len(decodeKey) > 256 {
+		return rc4.KeySizeError(len(decodeKey))
+	}
+
+	s.EncodeKey = encodeKey
+	s.DecodeKey = decodeKey
 	s.Flag |= SESS_KEYEXCG
+	return nil
 }
 
 func (s *TCPSession) ReadLoop(filter func(*NetPacket) bool) {
@@ -240,9 +247,14 @@ func (s *TCPSession) ReadLoop(filter func(*NetPacket) bool) {
 		}
 		s.PacketRcvSeq++
 
+		//fmt.Printf("a   %x\n", payload)
 		// 解密
 		if s.Flag&SESS_ENCRYPT != 0 {
-			s.Decoder.XORKeyStream(payload, payload)
+			decoder, _ := rc4.NewCipher(s.DecodeKey)
+			decoder.XORKeyStream(payload, payload)
+			//fmt.Printf("b1  %x\n", payload)
+			//} else {
+			//fmt.Printf("b2  %x\n", payload)
 		}
 		// 读客户端数据包序列号(1,2,3...)
 		// 客户端发送的数据包必须包含一个自增的序号，必须严格递增
@@ -365,8 +377,9 @@ func (s *TCPSession) DirectSend(packet *NetPacket) bool {
 	// encryption
 	// (NOT_ENCRYPTED) -> KEYEXCG -> ENCRYPT
 	if s.Flag&SESS_ENCRYPT != 0 { // encryption is enabled
+		encoder, _ := rc4.NewCipher(s.EncodeKey)
 		data := s.sendCache[HEAD_SIZE:totalSize]
-		s.Encoder.XORKeyStream(data, data)
+		encoder.XORKeyStream(data, data)
 	} else if s.Flag&SESS_KEYEXCG != 0 { // key is exchanged, encryption is not yet enabled
 		//s.Flag &^= SESS_KEYEXCG
 		s.Flag |= SESS_ENCRYPT
@@ -456,30 +469,6 @@ func NewSession(conn NetConnIF, readChan, sendChan chan *NetPacket, offChan chan
 	s.IP = net.ParseIP(host)
 	//log.Debugf("new connection from:%v port:%v", host, port)
 	return s, nil
-}
-
-func (s *TCPSession) ParsePacket(pkt []byte) *NetPacket {
-	defer log.PrintPanicStack()
-	if len(pkt) <= HEAD_SIZE {
-		log.Warnf("error parse packet,bytes:%d,session:%d,remote:%s", len(pkt), s.SessionId, s.RemoteAddr())
-		return nil
-	}
-	// 4字节包长度
-	// packet data
-	size := ServerEndian.Uint32(pkt[:HEAD_SIZE])
-
-	if (s.maxRecvSize != 0 && size > s.maxRecvSize) || int(size) < MSG_ID_SIZE || int(size)+HEAD_SIZE != len(pkt) {
-		log.Warnf("error parse packet,bytes:%d,size:%d,session:%d,remote:%s", len(pkt), size, s.SessionId, s.RemoteAddr())
-		return nil
-	}
-	data := pkt[HEAD_SIZE:]
-	// 解密
-	if s.Flag&SESS_ENCRYPT != 0 {
-		//decoder, _ := rc4.NewCipher(s.DecodeKey)
-		s.Decoder.XORKeyStream(data, data)
-	}
-	msgId := ServerEndian.Uint16(data[:MSG_ID_SIZE])
-	return &NetPacket{MsgId: msgId, Data: data[MSG_ID_SIZE:], Session: s, ReceiveTime: time.Now()}
 }
 
 func (s *TCPSession) TraceStart(family, title string, expvar bool) {
