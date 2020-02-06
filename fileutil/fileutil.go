@@ -32,14 +32,8 @@ var (
 func init() {
 	wd, _ := os.Getwd()
 	fmt.Println("execute path:", wd)
-	arg0 := path.Clean(os.Args[0])
-	var exeFile string
-	if strings.HasPrefix(arg0, "/") {
-		exeFile = arg0
-	} else {
-		exeFile = filepath.Join(wd, arg0)
-	}
-	parent, exeName := path.Split(exeFile)
+	exeFile := filepath.Clean(os.Args[0])
+	parent, exeName := filepath.Split(exeFile)
 	names := strings.Split(exeName, ".")
 	exeName = names[0]
 	//1：命令执行所在目录
