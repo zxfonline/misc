@@ -84,6 +84,9 @@ func (err *SysError) Error() string {
 }
 
 func New(code ErrorType, err error) *SysError {
+	if err == nil {
+		return &SysError{Code: code}
+	}
 	return &SysError{Code: code, Content: err.Error()}
 }
 func NewError(code ErrorType, err string) *SysError {
