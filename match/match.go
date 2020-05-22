@@ -307,9 +307,11 @@ func (nd *LineNodeList) FindNode(find *LineNode) (bool, int) {
 	if size := nd.Len(); i < size {
 		if nd.entries[i] != find {
 			//相同数值后再定位具体指针的节点
-			for i = i + 1; i < size; i++ {
-				if nd.entries[i] == find {
+			for j := i + 1; j < size; j++ {
+				if nd.entries[j] == find {
+					i = j
 					found = true
+					break
 				}
 			}
 		} else {
