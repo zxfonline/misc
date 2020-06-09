@@ -8,15 +8,15 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/zxfonline/misc/log"
+	"topcrown.com/misc/log"
 
-	"github.com/zxfonline/misc/fileutil"
-	"github.com/zxfonline/misc/gerror"
-	"github.com/zxfonline/misc/timefix"
+	"topcrown.com/misc/fileutil"
+	"topcrown.com/misc/gerror"
+	"topcrown.com/misc/timefix"
 
 	lua "github.com/yuin/gopher-lua"
 	luajson "layeh.com/gopher-json"
-	luar "layeh.com/gopher-luar"
+	luar "topcrown.com/misc/gopher-luar"
 )
 
 //GMHandler gm Lua指令实现接口
@@ -29,10 +29,14 @@ var (
 	//GlobalLuaState 全局lua域
 	GlobalLuaState *lua.LState
 
-	GmHandler GMHandler
+	_GmHandler GMHandler
 	//lua文件目录
 	_luapath string
 )
+
+func GmHandler() GMHandler {
+	return _GmHandler
+}
 
 //LuaLogf 打印日志文件
 func LuaLogf(format string, v ...interface{}) {
@@ -65,7 +69,7 @@ func GMInit(H GMHandler, globalVars map[string]interface{}, luapath string) {
 	luajson.Preload(L)
 
 	GlobalLuaState = L
-	GmHandler = H
+	_GmHandler = H
 	RegistHander(reflect.ValueOf(H))
 
 	initGlobalVariable(L, globalVars)
@@ -78,7 +82,7 @@ func initGlobalVariable(L *lua.LState, globalVars map[string]interface{}) {
 	//日志方法
 	L.SetGlobal("Logf", luar.New(L, LuaLogf))
 	//gm工具类
-	L.SetGlobal("GM", luar.New(L, GmHandler))
+	L.SetGlobal("GM", luar.New(L, _GmHandler))
 }
 
 func setOnceGlobal(L *lua.LState, now int64, params map[int]interface{}) {
