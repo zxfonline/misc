@@ -29,7 +29,7 @@ var (
 	//GlobalLuaState 全局lua域
 	GlobalLuaState *lua.LState
 
-	_GmHandler GMHandler
+	GmHandler GMHandler
 	//lua文件目录
 	_luapath string
 )
@@ -65,7 +65,7 @@ func GMInit(H GMHandler, globalVars map[string]interface{}, luapath string) {
 	luajson.Preload(L)
 
 	GlobalLuaState = L
-	_GmHandler = H
+	GmHandler = H
 	RegistHander(reflect.ValueOf(H))
 
 	initGlobalVariable(L, globalVars)
@@ -78,7 +78,7 @@ func initGlobalVariable(L *lua.LState, globalVars map[string]interface{}) {
 	//日志方法
 	L.SetGlobal("Logf", luar.New(L, LuaLogf))
 	//gm工具类
-	L.SetGlobal("GM", luar.New(L, _GmHandler))
+	L.SetGlobal("GM", luar.New(L, GmHandler))
 }
 
 func setOnceGlobal(L *lua.LState, now int64, params map[int]interface{}) {
