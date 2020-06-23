@@ -130,6 +130,15 @@ func DeltaDays(unix1, unix2 int64) int64 {
 	return days
 }
 
+//DiffDays 获取两个时间相差天数
+func DiffDays(before, after int64) int64 {
+	t1 := Second2Time(before)
+	t2 := Second2Time(after)
+	t1 = Time2Midnight(t1)
+	t2 = Time2Midnight(t2)
+	return int64(t2.Sub(t1)/time.Millisecond) / MILLISECONDS_OF_DAY
+}
+
 //S2UnixTime date format: "2006-01-02 15:04:05"
 func S2UnixTime(value string, loc *time.Location) (*time.Time, error) {
 	re := regexp.MustCompile(`([\d]+)-([\d]+)-([\d]+) ([\d]+):([\d]+):([\d]+)`)
