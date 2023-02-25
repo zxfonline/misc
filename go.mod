@@ -9,11 +9,9 @@ require (
 	github.com/sirupsen/logrus v1.4.2
 	github.com/stretchr/testify v1.4.0
 	github.com/yuin/gopher-lua v0.0.0-20190206043414-8bfc7677f583
-	golang.org/x/net v0.0.0-20191009170851-d66e71096ffb
-	golang.org/x/sys v0.0.0-20191009170203-06d7bd2c5f4f // indirect
+	golang.org/x/sys v0.1.0 // indirect
 	gopkg.in/yaml.v2 v2.2.7
 	layeh.com/gopher-json v0.0.0-20190114024228-97fed8db8427
-	layeh.com/gopher-luar v0.0.0-00010101000000-000000000000
 
 )
 
